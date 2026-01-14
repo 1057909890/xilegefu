@@ -1,0 +1,166 @@
+<!--pages/home/index.wxml-->
+<view class="home-page">
+  <!-- 时间选择区 -->
+  <view class="time-section">
+    <view class="time-display" bindtap="showTimePicker">
+      <text class="time-value">{{duration}}分钟</text>
+      <text class="time-hint">点击这里切换时间</text>
+    </view>
+    
+    <!-- 时间选择器弹窗 -->
+    <view class="time-picker-modal {{showTimePicker ? 'show' : ''}}" catchtap="hideTimePicker">
+      <view class="time-picker-content" catchtap="stopPropagation">
+        <view class="picker-header">
+          <text class="picker-title">选择训练时长</text>
+          <text class="picker-close" bindtap="hideTimePicker">✕</text>
+        </view>
+        
+        <view class="slider-container">
+          <slider 
+            value="{{duration}}" 
+            min="5" 
+            max="30" 
+            step="1"
+            activeColor="#8F8EE4"
+            backgroundColor="#5D5C80"
+            block-color="#FFFFFF"
+            block-size="24"
+            bindchange="onSliderChange"
+            show-value="{{false}}"
+          />
+          <view class="slider-labels">
+            <text>5分钟</text>
+            <text>30分钟</text>
+          </view>
+        </view>
+        
+        <view class="quick-buttons">
+          <view 
+            class="quick-btn {{duration === 5 ? 'active' : ''}}"
+            bindtap="setDuration"
+            data-duration="5"
+          >5</view>
+          <view 
+            class="quick-btn {{duration === 10 ? 'active' : ''}}"
+            bindtap="setDuration"
+            data-duration="10"
+          >10</view>
+          <view 
+            class="quick-btn {{duration === 15 ? 'active' : ''}}"
+            bindtap="setDuration"
+            data-duration="15"
+          >15</view>
+          <view 
+            class="quick-btn {{duration === 20 ? 'active' : ''}}"
+            bindtap="setDuration"
+            data-duration="20"
+          >20</view>
+          <view 
+            class="quick-btn {{duration === 30 ? 'active' : ''}}"
+            bindtap="setDuration"
+            data-duration="30"
+          >30</view>
+        </view>
+        
+        <button class="picker-confirm-btn" bindtap="confirmTime">完成</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 呼吸节奏选择区 -->
+  <view class="rhythm-section">
+    <view class="section-header">
+      <text class="section-title">呼吸节奏</text>
+      <text class="edit-icon" bindtap="editRhythm">✎</text>
+    </view>
+    
+    <view class="rhythm-display">
+      <view class="rhythm-item rhythm-inhale">
+        <text class="rhythm-label">吸气</text>
+        <text class="rhythm-time">{{rhythm.inhale}}s</text>
+      </view>
+      <text class="rhythm-arrow">→</text>
+      <view class="rhythm-item rhythm-exhale">
+        <text class="rhythm-label">呼气</text>
+        <text class="rhythm-time">{{rhythm.exhale}}s</text>
+      </view>
+      <text class="rhythm-arrow">→</text>
+      <view class="rhythm-item rhythm-hold">
+        <text class="rhythm-label">屏息</text>
+        <text class="rhythm-time">{{rhythm.hold}}s</text>
+      </view>
+    </view>
+    
+    <text class="rhythm-hint">点击自定义呼吸节奏</text>
+    
+    <!-- 呼吸节奏编辑弹窗 -->
+    <view class="rhythm-modal {{showRhythmEditor ? 'show' : ''}}" catchtap="hideRhythmEditor">
+      <view class="rhythm-editor-content" catchtap="stopPropagation">
+        <view class="editor-header">
+          <text class="editor-title">自定义呼吸节奏</text>
+          <text class="editor-close" bindtap="hideRhythmEditor">✕</text>
+        </view>
+        
+        <view class="rhythm-editor-item">
+          <text class="editor-label">吸气时长（秒）</text>
+          <view class="editor-controls">
+            <button class="editor-btn" bindtap="adjustRhythm" data-type="inhale" data-delta="-1">-</button>
+            <text class="editor-value">{{rhythm.inhale}}</text>
+            <button class="editor-btn" bindtap="adjustRhythm" data-type="inhale" data-delta="1">+</button>
+          </view>
+        </view>
+        
+        <view class="rhythm-editor-item">
+          <text class="editor-label">呼气时长（秒）</text>
+          <view class="editor-controls">
+            <button class="editor-btn" bindtap="adjustRhythm" data-type="exhale" data-delta="-1">-</button>
+            <text class="editor-value">{{rhythm.exhale}}</text>
+            <button class="editor-btn" bindtap="adjustRhythm" data-type="exhale" data-delta="1">+</button>
+          </view>
+        </view>
+        
+        <view class="rhythm-editor-item">
+          <text class="editor-label">屏息时长（秒）</text>
+          <view class="editor-controls">
+            <button class="editor-btn" bindtap="adjustRhythm" data-type="hold" data-delta="-1">-</button>
+            <text class="editor-value">{{rhythm.hold}}</text>
+            <button class="editor-btn" bindtap="adjustRhythm" data-type="hold" data-delta="1">+</button>
+          </view>
+        </view>
+        
+        <button class="editor-confirm-btn" bindtap="confirmRhythm">完成</button>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 训练要点 -->
+  <view class="tips-section">
+    <text class="section-title">训练要点</text>
+    <view class="tips-list">
+      <view class="tip-item">
+        <text class="tip-number">1</text>
+        <text class="tip-text">一手放胸部，一手放腹部</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-number">2</text>
+        <text class="tip-text">慢慢吸气，腹部鼓起</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-number">3</text>
+        <text class="tip-text">慢慢呼气，腹部内收</text>
+      </view>
+      <view class="tip-item">
+        <text class="tip-number">4</text>
+        <text class="tip-text">保持胸部相对不动</text>
+      </view>
+    </view>
+  </view>
+  
+  <!-- 开始按钮 -->
+  <view class="start-btn-container safe-area-bottom">
+    <button class="start-btn" bindtap="startTraining">
+      <view class="start-btn-glow"></view>
+      <text class="start-btn-text">开始</text>
+    </button>
+  </view>
+</view>

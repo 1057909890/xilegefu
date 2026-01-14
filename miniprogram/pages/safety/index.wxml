@@ -1,0 +1,70 @@
+<!--pages/safety/index.wxml-->
+<view class="safety-page">
+  <!-- 标题 -->
+  <view class="title">使用前重要提示</view>
+  
+  <!-- 警告提示框 -->
+  <view class="warning-box">
+    <view class="warning-icon">
+      <view class="warning-triangle"></view>
+      <text class="warning-exclamation">!</text>
+    </view>
+    <text class="warning-text">本应用基于医学循证依据设计，请在使用前仔细阅读以下内容</text>
+  </view>
+  
+  <!-- 适应症 -->
+  <view class="content-card">
+    <view class="card-header">
+      <view class="icon-circle icon-circle-green">
+        <text class="icon-check">✓</text>
+      </view>
+      <text class="card-title">适应症</text>
+    </view>
+    <view class="card-content">
+      <text class="card-item">• 慢性支气管炎患者</text>
+      <text class="card-item">• COPD（慢阻肺）患者，需要呼吸康复训练的人群</text>
+    </view>
+  </view>
+  
+  <!-- 禁忌症 -->
+  <view class="content-card">
+    <view class="card-header">
+      <view class="icon-circle icon-circle-red">
+        <text class="icon-x">✕</text>
+      </view>
+      <text class="card-title">禁忌症</text>
+    </view>
+    <view class="card-content">
+      <text class="card-item">• 急性呼吸道感染期</text>
+      <text class="card-item">• 未控制的心律失常、近期心肌梗死（<4周）</text>
+    </view>
+  </view>
+  
+  <!-- 紧急情况 -->
+  <view class="content-card">
+    <view class="card-header">
+      <view class="icon-circle icon-circle-red">
+        <text class="icon-plus">+</text>
+      </view>
+      <text class="card-title">紧急情况</text>
+    </view>
+    <view class="card-content">
+      <text class="card-item">训练时如出现头晕、胸痛、严重呼吸困难应立即停止训练</text>
+    </view>
+  </view>
+  
+  <!-- 底部确认区域 -->
+  <view class="bottom-area safe-area-bottom">
+    <view class="checkbox-area" bindtap="toggleAgree">
+      <view class="checkbox {{agreed ? 'checked' : ''}}">
+        <text class="checkbox-icon" wx:if="{{agreed}}">✓</text>
+      </view>
+      <text class="checkbox-text">我已阅读并同意上述内容</text>
+    </view>
+    <button class="confirm-btn {{agreed ? 'active' : ''}}" 
+            disabled="{{!agreed}}" 
+            bindtap="handleConfirm">
+      开始使用
+    </button>
+  </view>
+</view>

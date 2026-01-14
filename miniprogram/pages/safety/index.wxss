@@ -1,0 +1,184 @@
+/* pages/safety/index.wxss */
+.safety-page {
+  min-height: 100vh;
+  background: #EEF2FB;
+  padding: 60rpx 40rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #2D3962;
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.warning-box {
+  background: #FEE597;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  align-items: flex-start;
+}
+
+.warning-icon {
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: 24rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.warning-triangle {
+  width: 0;
+  height: 0;
+  border-left: 30rpx solid transparent;
+  border-right: 30rpx solid transparent;
+  border-bottom: 52rpx solid #FFCC00;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.warning-exclamation {
+  position: absolute;
+  top: 8rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #000;
+  font-size: 36rpx;
+  font-weight: bold;
+  z-index: 1;
+}
+
+.warning-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #2D3962;
+  line-height: 1.6;
+}
+
+.content-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(213, 217, 224, 0.3);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.icon-circle {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.icon-circle-green {
+  background: #72D38A;
+}
+
+.icon-circle-red {
+  background: #F15C6C;
+}
+
+.icon-check,
+.icon-x,
+.icon-plus {
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #2D3962;
+}
+
+.card-content {
+  padding-left: 76rpx;
+}
+
+.card-item {
+  display: block;
+  font-size: 28rpx;
+  color: #5E6C90;
+  line-height: 1.8;
+  margin-bottom: 16rpx;
+}
+
+.bottom-area {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  padding: 32rpx 40rpx;
+  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.checkbox-area {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border: 2rpx solid #ADBAD6;
+  border-radius: 8rpx;
+  margin-right: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.checkbox.checked {
+  background: #8F8EE4;
+  border-color: #8F8EE4;
+}
+
+.checkbox-icon {
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
+.checkbox-text {
+  font-size: 28rpx;
+  color: #5E6C90;
+}
+
+.confirm-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  background: #ADBAD6;
+  color: #FFFFFF;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  border: none;
+  transition: all 0.3s;
+}
+
+.confirm-btn.active {
+  background: #8F8EE4;
+}
+
+.confirm-btn[disabled] {
+  opacity: 0.5;
+}

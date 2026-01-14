@@ -1,0 +1,38 @@
+<!--pages/complete/index.wxml-->
+<view class="complete-page">
+  <!-- 成功图标 -->
+  <view class="success-icon">
+    <view class="icon-circle">
+      <view class="checkmark"></view>
+    </view>
+  </view>
+  
+  <!-- 完成标题 -->
+  <text class="complete-title">训练完成！</text>
+  
+  <!-- 信息卡片 -->
+  <view class="info-card">
+    <view class="info-item">
+      <image class="info-icon" src="/images/icons/clock.png" mode="aspectFit"></image>
+      <text class="info-text">本次训练时长: {{duration}}</text>
+    </view>
+    <view class="info-item">
+      <image class="info-icon" src="/images/icons/refresh.png" mode="aspectFit"></image>
+      <text class="info-text">今日已完成 {{todayCount}} 次训练</text>
+    </view>
+    <view class="info-item">
+      <image class="info-icon" src="/images/icons/calendar.png" mode="aspectFit"></image>
+      <text class="info-text">已连续打卡 {{checkInDays}} 天</text>
+    </view>
+    <view class="info-item">
+      <image class="info-icon" src="/images/icons/arrow-up.png" mode="aspectFit"></image>
+      <text class="info-text">累计完成 {{totalCount}} 次训练</text>
+    </view>
+  </view>
+  
+  <!-- 操作按钮 -->
+  <view class="action-buttons safe-area-bottom">
+    <button class="action-btn back-btn" bindtap="goHome">返回首页</button>
+    <button class="action-btn history-btn" bindtap="viewHistory">查看历史记录</button>
+  </view>
+</view>

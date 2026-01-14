@@ -1,0 +1,47 @@
+<!--pages/subscribe/index.wxml-->
+<view class="subscribe-page">
+  <!-- 仪表盘卡片 -->
+  <view class="dashboard-card">
+    <view class="card-header">
+      <text class="header-title">Dashboard</text>
+    </view>
+    <view class="card-body">
+      <text class="body-text">累计打卡天数: {{checkInDays}}</text>
+      <text class="body-text">今日完成次数: {{todayCount}}</text>
+    </view>
+  </view>
+  
+  <!-- 提醒卡片 -->
+  <view class="reminder-card">
+    <view class="reminder-header">
+      <image class="bell-icon" src="/images/icons/bell.png" mode="aspectFit"></image>
+      <view class="reminder-text">
+        <text class="reminder-title">是否开启训练提醒？</text>
+        <text class="reminder-subtitle">可选择每周提醒次数</text>
+      </view>
+    </view>
+    
+    <view class="reminder-options">
+      <button 
+        class="option-btn {{selectedFrequency === 3 ? 'active' : ''}}"
+        bindtap="selectFrequency"
+        data-frequency="3"
+      >每周3次</button>
+      <button 
+        class="option-btn {{selectedFrequency === 5 ? 'active' : ''}}"
+        bindtap="selectFrequency"
+        data-frequency="5"
+      >每周5次</button>
+      <button 
+        class="option-btn {{selectedFrequency === 0 ? 'active' : ''}}"
+        bindtap="selectFrequency"
+        data-frequency="0"
+      >自定义</button>
+    </view>
+  </view>
+  
+  <!-- 确认按钮 -->
+  <view class="confirm-section safe-area-bottom">
+    <button class="confirm-btn" bindtap="handleConfirm">确认</button>
+  </view>
+</view>

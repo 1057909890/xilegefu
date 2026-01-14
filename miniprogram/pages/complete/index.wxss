@@ -1,0 +1,128 @@
+/* pages/complete/index.wxss */
+.complete-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E0F5EB 0%, #D3F1FC 100%);
+  padding: 80rpx 40rpx 200rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-icon {
+  margin-bottom: 60rpx;
+  animation: scaleIn 0.5s ease-out;
+}
+
+.icon-circle {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #69E8BD 0%, #63C7FF 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 0 40rpx rgba(105, 232, 189, 0.3);
+}
+
+.icon-circle::before {
+  content: '';
+  position: absolute;
+  top: -10rpx;
+  left: -10rpx;
+  right: -10rpx;
+  bottom: -10rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255, 255, 255, 0.4);
+}
+
+.checkmark {
+  width: 100rpx;
+  height: 60rpx;
+  border-left: 8rpx solid #FFFFFF;
+  border-bottom: 8rpx solid #FFFFFF;
+  transform: rotate(-45deg);
+  margin-top: -10rpx;
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.complete-title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 60rpx;
+}
+
+.info-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 60rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  width: 48rpx;
+  height: 48rpx;
+  margin-right: 24rpx;
+  opacity: 0.6;
+}
+
+.info-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.action-buttons {
+  width: 100%;
+  display: flex;
+  gap: 24rpx;
+  padding: 0 40rpx;
+}
+
+.action-btn {
+  flex: 1;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  border: none;
+}
+
+.back-btn {
+  background: #FFFFFF;
+  color: #333333;
+  border: 2rpx solid #A2E1F6;
+}
+
+.history-btn {
+  background: linear-gradient(135deg, #5DCFFF 0%, #67EDBC 100%);
+  color: #FFFFFF;
+}

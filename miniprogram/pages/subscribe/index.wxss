@@ -1,0 +1,134 @@
+/* pages/subscribe/index.wxss */
+.subscribe-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #DDEEF9 0%, #EAF7FE 100%);
+  padding: 60rpx 40rpx 200rpx;
+  box-sizing: border-box;
+}
+
+/* 仪表盘卡片 */
+.dashboard-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  margin-bottom: 40rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #8FDD 0%, #90F7D3 100%);
+  padding: 32rpx 40rpx;
+  text-align: center;
+}
+
+.header-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323333;
+}
+
+.card-body {
+  padding: 40rpx;
+}
+
+.body-text {
+  display: block;
+  font-size: 28rpx;
+  color: #323333;
+  margin-bottom: 16rpx;
+}
+
+.body-text:last-child {
+  margin-bottom: 0;
+}
+
+/* 提醒卡片 */
+.reminder-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+  border: 2rpx solid transparent;
+  background-image: linear-gradient(#FFFFFF, #FFFFFF),
+    linear-gradient(135deg, #FFD3A3 0%, #FFDEC9 100%);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.reminder-header {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 40rpx;
+}
+
+.bell-icon {
+  width: 60rpx;
+  height: 60rpx;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.reminder-text {
+  flex: 1;
+}
+
+.reminder-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323333;
+  margin-bottom: 12rpx;
+}
+
+.reminder-subtitle {
+  display: block;
+  font-size: 28rpx;
+  color: #323333;
+}
+
+.reminder-options {
+  display: flex;
+  gap: 20rpx;
+  flex-wrap: wrap;
+}
+
+.option-btn {
+  flex: 1;
+  min-width: 180rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: #E4F2FF;
+  color: #323333;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  border: none;
+  transition: all 0.3s;
+}
+
+.option-btn.active {
+  background: #8F8EE4;
+  color: #FFFFFF;
+}
+
+/* 确认按钮 */
+.confirm-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40rpx;
+  background: transparent;
+}
+
+.confirm-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  background: linear-gradient(135deg, #C3A5FF 0%, #FEBEE8 100%);
+  color: #323333;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  border: none;
+}

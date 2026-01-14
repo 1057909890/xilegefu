@@ -1,0 +1,407 @@
+/* pages/home/index.wxss */
+.home-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1E1C33 0%, #2A2845 100%);
+  padding: 60rpx 40rpx 200rpx;
+  box-sizing: border-box;
+}
+
+/* 时间选择区 */
+.time-section {
+  margin-bottom: 60rpx;
+}
+
+.time-display {
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.time-value {
+  display: block;
+  font-size: 72rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-bottom: 16rpx;
+}
+
+.time-hint {
+  display: block;
+  font-size: 24rpx;
+  color: #D9D9D9;
+}
+
+/* 时间选择器弹窗 */
+.time-picker-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: flex-end;
+  z-index: 1000;
+}
+
+.time-picker-modal.show {
+  display: flex;
+}
+
+.time-picker-content {
+  width: 100%;
+  background: #3C3B5E;
+  border-radius: 40rpx 40rpx 0 0;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.picker-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.picker-close {
+  font-size: 40rpx;
+  color: #D9D9D9;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slider-container {
+  margin-bottom: 40rpx;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20rpx;
+  font-size: 24rpx;
+  color: #D9D9D9;
+}
+
+.quick-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 40rpx;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.quick-btn {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  border: 2rpx solid #66658B;
+  color: #D9D9D9;
+  font-size: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.quick-btn.active {
+  background: #8F8EE4;
+  border-color: #8F8EE4;
+  color: #FFFFFF;
+  box-shadow: 0 0 20rpx rgba(143, 142, 228, 0.5);
+}
+
+.picker-confirm-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #8F8EE4;
+  color: #FFFFFF;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  border: none;
+}
+
+/* 呼吸节奏区 */
+.rhythm-section {
+  background: #3C3B5E;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.edit-icon {
+  font-size: 32rpx;
+  color: #8F8EE4;
+}
+
+.rhythm-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24rpx;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.rhythm-item {
+  padding: 20rpx 32rpx;
+  border-radius: 40rpx;
+  text-align: center;
+  min-width: 120rpx;
+}
+
+.rhythm-inhale {
+  background: #8FE4DF;
+  color: #1D1C34;
+}
+
+.rhythm-exhale {
+  background: #8FE4DF;
+  color: #1D1C34;
+}
+
+.rhythm-hold {
+  background: #5D5C80;
+  color: #FFFFFF;
+}
+
+.rhythm-label {
+  display: block;
+  font-size: 24rpx;
+  margin-bottom: 8rpx;
+}
+
+.rhythm-time {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.rhythm-arrow {
+  font-size: 32rpx;
+  color: #D9D9D9;
+  margin: 0 8rpx;
+}
+
+.rhythm-hint {
+  display: block;
+  text-align: center;
+  font-size: 24rpx;
+  color: #D9D9D9;
+}
+
+/* 呼吸节奏编辑弹窗 */
+.rhythm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.rhythm-modal.show {
+  display: flex;
+}
+
+.rhythm-editor-content {
+  width: 80%;
+  max-width: 600rpx;
+  background: #3C3B5E;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.editor-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.editor-close {
+  font-size: 40rpx;
+  color: #D9D9D9;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rhythm-editor-item {
+  margin-bottom: 40rpx;
+}
+
+.editor-label {
+  display: block;
+  font-size: 28rpx;
+  color: #D9D9D9;
+  margin-bottom: 24rpx;
+}
+
+.editor-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editor-btn {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: #5D5C80;
+  color: #FFFFFF;
+  font-size: 40rpx;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  min-width: 120rpx;
+  text-align: center;
+}
+
+.editor-confirm-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #8F8EE4;
+  color: #FFFFFF;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  border: none;
+  margin-top: 20rpx;
+}
+
+/* 训练要点 */
+.tips-section {
+  background: #3C3B5E;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+}
+
+.tips-list {
+  margin-top: 32rpx;
+}
+
+.tip-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
+.tip-number {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #8F8EE4;
+  color: #FFFFFF;
+  font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+  flex-shrink: 0;
+}
+
+.tip-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #D9D9D9;
+  line-height: 1.6;
+}
+
+/* 开始按钮 */
+.start-btn-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40rpx;
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+}
+
+.start-btn {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F8C8A3 0%, #AE8FE4 100%);
+  border: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40rpx rgba(248, 200, 163, 0.5);
+}
+
+.start-btn-glow {
+  position: absolute;
+  top: -10rpx;
+  left: -10rpx;
+  right: -10rpx;
+  bottom: -10rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F8C8A3 0%, #AE8FE4 100%);
+  opacity: 0.3;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+.start-btn-text {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  position: relative;
+  z-index: 1;
+}

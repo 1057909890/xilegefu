@@ -1,0 +1,120 @@
+/* pages/history/index.wxss */
+.history-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #DDEEF9 0%, #EAF7FE 100%);
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.header {
+  margin-bottom: 40rpx;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #323333;
+}
+
+/* 统计卡片 */
+.stats-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  margin-bottom: 40rpx;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666666;
+  margin-bottom: 12rpx;
+}
+
+.stat-value {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #323333;
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: #E0E0E0;
+}
+
+/* 历史记录列表 */
+.history-list {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #F0F0F0;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.item-left {
+  flex: 1;
+}
+
+.item-date {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323333;
+  margin-bottom: 8rpx;
+}
+
+.item-time {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.item-right {
+  text-align: right;
+}
+
+.item-duration {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #8F8EE4;
+  margin-bottom: 8rpx;
+}
+
+.item-cycles {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.empty-state {
+  padding: 120rpx 40rpx;
+  text-align: center;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999999;
+}
