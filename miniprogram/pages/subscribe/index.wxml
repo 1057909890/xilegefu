@@ -14,7 +14,7 @@
   <!-- 提醒卡片 -->
   <view class="reminder-card">
     <view class="reminder-header">
-      <image class="bell-icon" src="/images/icons/bell.png" mode="aspectFit"></image>
+      <text class="bell-icon">🔔</text>
       <view class="reminder-text">
         <text class="reminder-title">是否开启训练提醒？</text>
         <text class="reminder-subtitle">可选择每周提醒次数</text>

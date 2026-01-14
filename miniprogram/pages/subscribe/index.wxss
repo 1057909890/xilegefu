@@ -13,12 +13,23 @@
   margin-bottom: 40rpx;
   overflow: hidden;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  position: relative;
 }
 
 .card-header {
   background: linear-gradient(135deg, #8FDD 0%, #90F7D3 100%);
   padding: 32rpx 40rpx;
   text-align: center;
+}
+
+.card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(143, 221, 255, 0.9) 0%, rgba(144, 247, 211, 0.9) 100%);
 }
 
 .header-title {
@@ -54,6 +65,7 @@
   background-origin: border-box;
   background-clip: padding-box, border-box;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  position: relative;
 }
 
 .reminder-header {
@@ -63,10 +75,12 @@
 }
 
 .bell-icon {
-  width: 60rpx;
-  height: 60rpx;
+  font-size: 60rpx;
   margin-right: 24rpx;
   flex-shrink: 0;
+  width: 60rpx;
+  text-align: center;
+  line-height: 60rpx;
 }
 
 .reminder-text {
@@ -107,8 +121,9 @@
 }
 
 .option-btn.active {
-  background: #8F8EE4;
+  background: linear-gradient(135deg, #8F8EE4 0%, #AE8FE4 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 15rpx rgba(143, 142, 228, 0.3);
 }
 
 /* 确认按钮 */
@@ -118,6 +133,7 @@
   left: 0;
   right: 0;
   padding: 40rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
   background: transparent;
 }
 

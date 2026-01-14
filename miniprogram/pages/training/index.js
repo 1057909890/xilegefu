@@ -27,15 +27,28 @@ Page({
     // 定时器
     timer: null,
     breathingTimer: null,
+    inhaleTimer: null,
+    holdTimer: null,
+    exhaleTimer: null,
     progressCanvas: null
   },
 
   onLoad(options) {
     // 获取参数
     const duration = parseInt(options.duration) || 10
-    const inhale = parseInt(options.inhale) || 3
-    const exhale = parseInt(options.exhale) || 6
-    const hold = parseInt(options.hold) || 2
+    let inhale = parseInt(options.inhale) || 3
+    let exhale = parseInt(options.exhale) || 6
+    let hold = parseInt(options.hold) || 2
+    
+    // 如果参数中没有，尝试从全局数据或本地存储获取
+    if (!options.inhale) {
+      const settings = wx.getStorageSync('trainingSettings')
+      if (settings && settings.rhythm) {
+        inhale = settings.rhythm.inhale || 3
+        exhale = settings.rhythm.exhale || 6
+        hold = settings.rhythm.hold || 2
+      }
+    }
     
     const totalSeconds = duration * 60
     
@@ -49,6 +62,8 @@ Page({
       timeDisplay: this.formatTime(totalSeconds),
       breathingCount: inhale
     })
+    
+    console.log('训练参数:', { duration, inhale, exhale, hold })
     
     // 初始化画布
     this.initCanvas()
@@ -186,24 +201,31 @@ Page({
     // 吸气阶段
     this.startInhale()
     
-    setTimeout(() => {
+    const inhaleTimer = setTimeout(() => {
       if (!this.data.isRunning || this.data.isPaused) return
       // 屏息阶段
       this.startHold()
       
-      setTimeout(() => {
+      const holdTimer = setTimeout(() => {
         if (!this.data.isRunning || this.data.isPaused) return
         // 呼气阶段
         this.startExhale()
         
-        setTimeout(() => {
+        const exhaleTimer = setTimeout(() => {
           if (this.data.isRunning && !this.data.isPaused) {
             // 继续下一个循环
             this.breathingCycle()
           }
         }, this.data.exhale * 1000)
+        
+        // 保存定时器以便清理
+        this.data.exhaleTimer = exhaleTimer
       }, this.data.hold * 1000)
+      
+      this.data.holdTimer = holdTimer
     }, this.data.inhale * 1000)
+    
+    this.data.inhaleTimer = inhaleTimer
   },
 
   // 吸气阶段
@@ -229,6 +251,21 @@ Page({
       breathingHint: '保持...',
       breathScale: 1.2
     })
+    
+    // 屏息倒计时
+    let count = this.data.hold
+    const holdCountdown = setInterval(() => {
+      if (!this.data.isRunning || this.data.isPaused || this.data.breathingState !== 'hold') {
+        clearInterval(holdCountdown)
+        return
+      }
+      count--
+      if (count >= 0) {
+        this.setData({ breathingCount: count })
+      } else {
+        clearInterval(holdCountdown)
+      }
+    }, 1000)
   },
 
   // 呼气阶段
@@ -247,11 +284,23 @@ Page({
 
   // 呼吸动画
   animateBreath(startScale, endScale, duration) {
+    if (this.data.breathingTimer) {
+      clearTimeout(this.data.breathingTimer)
+    }
+    
     const startTime = Date.now()
     const scaleDiff = endScale - startScale
+    const frameInterval = 16 // 约60fps
+    let lastCount = duration
     
     const animate = () => {
-      if (!this.data.isRunning || this.data.isPaused) return
+      if (!this.data.isRunning || this.data.isPaused) {
+        if (this.data.breathingTimer) {
+          clearTimeout(this.data.breathingTimer)
+          this.data.breathingTimer = null
+        }
+        return
+      }
       
       const elapsed = (Date.now() - startTime) / 1000
       const progress = Math.min(elapsed / duration, 1)
@@ -260,20 +309,24 @@ Page({
       const easeProgress = 0.5 - Math.cos(progress * Math.PI) / 2
       const currentScale = startScale + scaleDiff * easeProgress
       
-      this.setData({
-        breathScale: currentScale
-      })
-      
       // 更新倒计时
       const remaining = Math.ceil(duration - elapsed)
-      if (this.data.breathingState === 'inhale') {
-        this.setData({ breathingCount: Math.max(remaining, 0) })
-      } else if (this.data.breathingState === 'exhale') {
-        this.setData({ breathingCount: Math.max(remaining, 0) })
+      if (remaining !== lastCount && remaining >= 0) {
+        lastCount = remaining
+        this.setData({ 
+          breathScale: currentScale,
+          breathingCount: remaining
+        })
+      } else {
+        this.setData({ 
+          breathScale: currentScale
+        })
       }
       
       if (progress < 1) {
-        this.data.breathingTimer = requestAnimationFrame(animate)
+        this.data.breathingTimer = setTimeout(animate, frameInterval)
+      } else {
+        this.data.breathingTimer = null
       }
     }
     
@@ -287,7 +340,10 @@ Page({
       this.setData({
         isPaused: false
       })
-      this.breathingCycle()
+      // 如果当前没有呼吸动画在运行，重新开始
+      if (!this.data.breathingTimer && this.data.isRunning) {
+        this.breathingCycle()
+      }
     } else {
       // 暂停
       this.setData({
@@ -374,12 +430,24 @@ Page({
       clearInterval(this.data.timer)
     }
     if (this.data.breathingTimer) {
-      cancelAnimationFrame(this.data.breathingTimer)
+      clearTimeout(this.data.breathingTimer)
+    }
+    if (this.data.inhaleTimer) {
+      clearTimeout(this.data.inhaleTimer)
+    }
+    if (this.data.holdTimer) {
+      clearTimeout(this.data.holdTimer)
+    }
+    if (this.data.exhaleTimer) {
+      clearTimeout(this.data.exhaleTimer)
     }
     this.setData({
       isRunning: false,
       timer: null,
-      breathingTimer: null
+      breathingTimer: null,
+      inhaleTimer: null,
+      holdTimer: null,
+      exhaleTimer: null
     })
   },
 

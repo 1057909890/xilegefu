@@ -16,7 +16,7 @@
         style="width: 400rpx; height: 400rpx;"
       ></canvas>
       <view class="timer-content">
-        <text class="timer-text">{{timeDisplay}}</text>
+        <text class="timer-text {{isPaused ? 'paused' : ''}}">{{timeDisplay}}</text>
         <text class="timer-label">剩余</text>
       </view>
     </view>
@@ -58,8 +58,10 @@
       class="action-btn pause-btn {{isPaused ? 'resume' : ''}}" 
       bindtap="togglePause"
     >
-      {{isPaused ? '继续' : '暂停'}}
+      <text>{{isPaused ? '继续' : '暂停'}}</text>
     </button>
-    <button class="action-btn stop-btn" bindtap="handleStop">停止</button>
+    <button class="action-btn stop-btn" bindtap="handleStop">
+      <text>停止</text>
+    </button>
   </view>
 </view>

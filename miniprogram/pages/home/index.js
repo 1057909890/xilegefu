@@ -4,6 +4,7 @@ const app = getApp()
 Page({
   data: {
     duration: 10,
+    timeDisplay: '10:00',
     rhythm: {
       inhale: 3,
       exhale: 6,
@@ -24,13 +25,16 @@ Page({
     if (settings) {
       this.setData({
         duration: settings.duration || 10,
-        rhythm: settings.rhythm || { inhale: 3, exhale: 6, hold: 2 }
+        rhythm: settings.rhythm || { inhale: 3, exhale: 6, hold: 2 },
+        timeDisplay: this.formatTime(settings.duration || 10)
       })
     } else {
       // 使用默认值
+      const defaultDuration = app.globalData.trainingSettings.duration || 10
       this.setData({
-        duration: app.globalData.trainingSettings.duration,
-        rhythm: app.globalData.trainingSettings.rhythm
+        duration: defaultDuration,
+        rhythm: app.globalData.trainingSettings.rhythm,
+        timeDisplay: this.formatTime(defaultDuration)
       })
     }
   },
@@ -54,8 +58,10 @@ Page({
 
   // 滑块变化
   onSliderChange(e) {
+    const duration = e.detail.value
     this.setData({
-      duration: e.detail.value
+      duration: duration,
+      timeDisplay: this.formatTime(duration)
     })
   },
 
@@ -63,7 +69,8 @@ Page({
   setDuration(e) {
     const duration = parseInt(e.currentTarget.dataset.duration)
     this.setData({
-      duration: duration
+      duration: duration,
+      timeDisplay: this.formatTime(duration)
     })
   },
 
@@ -76,6 +83,11 @@ Page({
     
     // 更新全局数据
     app.globalData.trainingSettings.duration = this.data.duration
+    
+    // 更新时间显示
+    this.setData({
+      timeDisplay: this.formatTime(this.data.duration)
+    })
     
     this.hideTimePicker()
   },
@@ -140,5 +152,18 @@ Page({
     wx.navigateTo({
       url: `/pages/training/index?duration=${this.data.duration}&inhale=${this.data.rhythm.inhale}&exhale=${this.data.rhythm.exhale}&hold=${this.data.rhythm.hold}`
     })
+  },
+
+  // 格式化时间显示（分钟转成时:分格式）
+  formatTime(minutes) {
+    if (!minutes || minutes === 0) {
+      return '10:00'
+    }
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    if (hours > 0) {
+      return `${hours}:${String(mins).padStart(2, '0')}`
+    }
+    return `${String(mins).padStart(2, '0')}:00`
   }
 })

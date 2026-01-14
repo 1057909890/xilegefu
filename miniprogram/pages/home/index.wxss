@@ -1,33 +1,46 @@
 /* pages/home/index.wxss */
 .home-page {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #1E1C33 0%, #2A2845 100%);
-  padding: 60rpx 40rpx 200rpx;
+  height: 100vh;
+  background: #1E1C33;
+  padding: 0 40rpx;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 时间选择区 */
 .time-section {
-  margin-bottom: 60rpx;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 120rpx;
 }
 
 .time-display {
   text-align: center;
-  padding: 40rpx 0;
+  padding: 0;
+  background: transparent;
+  width: 100%;
 }
 
 .time-value {
   display: block;
-  font-size: 72rpx;
+  font-size: 96rpx;
   font-weight: bold;
   color: #FFFFFF;
-  margin-bottom: 16rpx;
+  letter-spacing: 4rpx;
+  line-height: 1.2;
+  margin-bottom: 20rpx;
+  text-shadow: 0 0 30rpx rgba(255, 255, 255, 0.5);
 }
 
 .time-hint {
   display: block;
-  font-size: 24rpx;
-  color: #D9D9D9;
+  font-size: 28rpx;
+  color: #FFFFFF;
+  opacity: 0.9;
 }
 
 /* 时间选择器弹窗 */
@@ -37,9 +50,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: none;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
 }
 
@@ -47,19 +61,45 @@
   display: flex;
 }
 
-.time-picker-content {
+.time-picker-wrapper {
   width: 100%;
-  background: #3C3B5E;
-  border-radius: 40rpx 40rpx 0 0;
-  padding: 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 40rpx;
   box-sizing: border-box;
 }
 
-.picker-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40rpx;
+.picker-time-display {
+  text-align: center;
+  padding: 60rpx 0 40rpx;
+  width: 100%;
+}
+
+.picker-time-value {
+  display: block;
+  font-size: 96rpx;
+  font-weight: bold;
+  color: #FFFFFF;
+  letter-spacing: 4rpx;
+  line-height: 1.2;
+  margin-bottom: 16rpx;
+}
+
+.picker-time-hint {
+  display: block;
+  font-size: 28rpx;
+  color: #FFFFFF;
+  opacity: 0.9;
+}
+
+.picker-card {
+  width: 100%;
+  background: rgba(60, 59, 94, 0.9);
+  border-radius: 24rpx;
+  padding: 40rpx;
+  box-sizing: border-box;
+  backdrop-filter: blur(10rpx);
 }
 
 .picker-title {
@@ -94,28 +134,31 @@
   display: flex;
   justify-content: space-around;
   margin-bottom: 40rpx;
-  flex-wrap: wrap;
-  gap: 20rpx;
+  flex-wrap: nowrap;
+  gap: 16rpx;
+  padding: 0 20rpx;
 }
 
 .quick-btn {
-  width: 100rpx;
-  height: 100rpx;
+  width: 80rpx;
+  height: 80rpx;
   border-radius: 50%;
   border: 2rpx solid #66658B;
   color: #D9D9D9;
-  font-size: 32rpx;
+  font-size: 28rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s;
+  background: transparent;
+  flex-shrink: 0;
 }
 
 .quick-btn.active {
   background: #8F8EE4;
   border-color: #8F8EE4;
   color: #FFFFFF;
-  box-shadow: 0 0 20rpx rgba(143, 142, 228, 0.5);
+  box-shadow: 0 0 30rpx rgba(143, 142, 228, 0.6);
 }
 
 .picker-confirm-btn {
@@ -135,6 +178,7 @@
   border-radius: 24rpx;
   padding: 40rpx;
   margin-bottom: 40rpx;
+  flex-shrink: 0;
 }
 
 .section-header {
@@ -160,30 +204,38 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 24rpx;
-  flex-wrap: wrap;
-  gap: 16rpx;
+  flex-wrap: nowrap;
+  gap: 12rpx;
+  overflow-x: auto;
 }
 
 .rhythm-item {
-  padding: 20rpx 32rpx;
+  padding: 20rpx 28rpx;
   border-radius: 40rpx;
   text-align: center;
-  min-width: 120rpx;
+  min-width: 100rpx;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .rhythm-inhale {
-  background: #8FE4DF;
-  color: #1D1C34;
+  background: #5D5C80;
+  color: #FFFFFF;
 }
 
 .rhythm-exhale {
-  background: #8FE4DF;
-  color: #1D1C34;
+  background: #5D5C80;
+  color: #FFFFFF;
 }
 
 .rhythm-hold {
   background: #5D5C80;
   color: #FFFFFF;
+}
+
+.rhythm-item.selected {
+  background: #8FE4DF;
+  color: #1D1C34;
 }
 
 .rhythm-label {
@@ -201,7 +253,8 @@
 .rhythm-arrow {
   font-size: 32rpx;
   color: #D9D9D9;
-  margin: 0 8rpx;
+  margin: 0 4rpx;
+  flex-shrink: 0;
 }
 
 .rhythm-hint {
@@ -352,14 +405,12 @@
 
 /* 开始按钮 */
 .start-btn-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 40rpx;
+  padding: 40rpx 0;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
-  z-index: 100;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .start-btn {
@@ -372,36 +423,61 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 40rpx rgba(248, 200, 163, 0.5);
+  box-shadow: 0 0 60rpx rgba(248, 200, 163, 0.8), 
+              0 0 120rpx rgba(174, 143, 228, 0.6),
+              0 0 180rpx rgba(248, 200, 163, 0.4);
+  z-index: 1;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
 }
 
 .start-btn-glow {
   position: absolute;
-  top: -10rpx;
-  left: -10rpx;
-  right: -10rpx;
-  bottom: -10rpx;
+  top: -40rpx;
+  left: -40rpx;
+  right: -40rpx;
+  bottom: -40rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F8C8A3 0%, #AE8FE4 100%);
-  opacity: 0.3;
-  animation: pulse 2s infinite;
+  background: radial-gradient(circle, rgba(248, 200, 163, 0.8) 0%, rgba(174, 143, 228, 0.6) 50%, transparent 100%);
+  opacity: 0.6;
+  animation: pulse 2s ease-in-out infinite;
+  z-index: -1;
+  filter: blur(30rpx);
+}
+
+.start-btn-glow::before {
+  content: '';
+  position: absolute;
+  top: -60rpx;
+  left: -60rpx;
+  right: -60rpx;
+  bottom: -60rpx;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(248, 200, 163, 0.4) 0%, rgba(174, 143, 228, 0.3) 50%, transparent 100%);
+  opacity: 0.5;
+  animation: pulse 2s ease-in-out infinite;
+  animation-delay: 0.5s;
+  filter: blur(50rpx);
 }
 
 @keyframes pulse {
   0%, 100% {
     transform: scale(1);
-    opacity: 0.3;
+    opacity: 0.5;
   }
   50% {
-    transform: scale(1.1);
-    opacity: 0.5;
+    transform: scale(1.2);
+    opacity: 0.8;
   }
 }
 
 .start-btn-text {
-  font-size: 40rpx;
+  font-size: 44rpx;
   font-weight: bold;
   color: #FFFFFF;
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  letter-spacing: 2rpx;
+  text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.5);
 }

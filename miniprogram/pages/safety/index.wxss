@@ -2,8 +2,9 @@
 .safety-page {
   min-height: 100vh;
   background: #EEF2FB;
-  padding: 60rpx 40rpx 40rpx;
+  padding: 60rpx 40rpx 200rpx;
   box-sizing: border-box;
+  padding-bottom: 200rpx;
 }
 
 .title {
@@ -82,6 +83,7 @@
   align-items: center;
   justify-content: center;
   margin-right: 20rpx;
+  flex-shrink: 0;
 }
 
 .icon-circle-green {
@@ -94,7 +96,7 @@
 
 .icon-check,
 .icon-x,
-.icon-plus {
+.icon-medical {
   color: #FFFFFF;
   font-size: 32rpx;
   font-weight: bold;
@@ -118,6 +120,10 @@
   margin-bottom: 16rpx;
 }
 
+.card-item:last-child {
+  margin-bottom: 0;
+}
+
 .bottom-area {
   position: fixed;
   bottom: 0;
@@ -125,7 +131,8 @@
   right: 0;
   background: #FFFFFF;
   padding: 32rpx 40rpx;
-  box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.06);
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 20rpx rgba(213, 217, 224, 0.3);
 }
 
 .checkbox-area {
@@ -144,6 +151,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s;
+  flex-shrink: 0;
 }
 
 .checkbox.checked {
@@ -176,7 +184,11 @@
 }
 
 .confirm-btn.active {
-  background: #8F8EE4;
+  background: #ADBAD6;
+}
+
+.confirm-btn.active:not([disabled]) {
+  background: linear-gradient(135deg, #8F8EE4 0%, #AE8FE4 100%);
 }
 
 .confirm-btn[disabled] {

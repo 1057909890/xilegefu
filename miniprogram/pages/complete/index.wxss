@@ -35,6 +35,16 @@
   bottom: -10rpx;
   border-radius: 50%;
   border: 4rpx solid rgba(255, 255, 255, 0.4);
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .checkmark {
@@ -74,6 +84,7 @@
   padding: 40rpx;
   margin-bottom: 60rpx;
   box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10rpx);
 }
 
 .info-item {
@@ -87,10 +98,12 @@
 }
 
 .info-icon {
-  width: 48rpx;
-  height: 48rpx;
+  font-size: 48rpx;
   margin-right: 24rpx;
   opacity: 0.6;
+  flex-shrink: 0;
+  width: 48rpx;
+  text-align: center;
 }
 
 .info-text {
@@ -104,6 +117,7 @@
   display: flex;
   gap: 24rpx;
   padding: 0 40rpx;
+  padding-bottom: calc(0rpx + env(safe-area-inset-bottom));
 }
 
 .action-btn {
@@ -120,9 +134,11 @@
   background: #FFFFFF;
   color: #333333;
   border: 2rpx solid #A2E1F6;
+  box-shadow: 0 2rpx 10rpx rgba(162, 225, 246, 0.2);
 }
 
 .history-btn {
   background: linear-gradient(135deg, #5DCFFF 0%, #67EDBC 100%);
   color: #FFFFFF;
+  box-shadow: 0 4rpx 20rpx rgba(93, 207, 255, 0.3);
 }

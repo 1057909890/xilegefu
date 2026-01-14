@@ -12,6 +12,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 60rpx;
+  padding-top: 80rpx;
+  padding-bottom: 20rpx;
 }
 
 .title {
@@ -54,6 +56,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+  z-index: 10;
 }
 
 .timer-text {
@@ -62,12 +65,29 @@
   font-weight: bold;
   color: #FFFFFF;
   margin-bottom: 16rpx;
+  text-shadow: 0 0 30rpx rgba(130, 208, 255, 0.8), 0 0 60rpx rgba(118, 245, 227, 0.6);
+  animation: timerGlow 2s ease-in-out infinite;
+}
+
+@keyframes timerGlow {
+  0%, 100% {
+    text-shadow: 0 0 30rpx rgba(130, 208, 255, 0.8), 0 0 60rpx rgba(118, 245, 227, 0.6);
+  }
+  50% {
+    text-shadow: 0 0 50rpx rgba(130, 208, 255, 1), 0 0 100rpx rgba(118, 245, 227, 0.8);
+  }
 }
 
 .timer-label {
   display: block;
   font-size: 24rpx;
   color: #B9C6E2;
+  opacity: 0.8;
+}
+
+.timer-text.paused {
+  animation: none;
+  text-shadow: 0 0 20rpx rgba(130, 208, 255, 0.5), 0 0 40rpx rgba(118, 245, 227, 0.3);
 }
 
 /* 数据栏 */
@@ -90,6 +110,7 @@
   font-size: 24rpx;
   color: #B9C6E2;
   margin-bottom: 12rpx;
+  opacity: 0.8;
 }
 
 .stat-value {
@@ -103,6 +124,7 @@
   width: 2rpx;
   height: 60rpx;
   background: #5E678B;
+  opacity: 0.6;
 }
 
 /* 呼吸引导模块 */
@@ -121,20 +143,24 @@
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #6ED380 0%, #4CB05D 100%);
-  transition: transform 0.5s ease-in-out;
-  box-shadow: 0 0 40rpx rgba(110, 211, 128, 0.3);
+  transition: transform 0.1s linear, box-shadow 0.3s ease-in-out;
+  box-shadow: 0 0 60rpx rgba(110, 211, 128, 0.4);
+  will-change: transform;
 }
 
 .breathing-indicator.inhale {
   background: linear-gradient(180deg, #6ED380 0%, #4CB05D 100%);
+  box-shadow: 0 0 60rpx rgba(110, 211, 128, 0.4);
 }
 
 .breathing-indicator.exhale {
   background: linear-gradient(180deg, #6ED380 0%, #4CB05D 100%);
+  box-shadow: 0 0 40rpx rgba(110, 211, 128, 0.3);
 }
 
 .breathing-indicator.hold {
   background: linear-gradient(180deg, #82D0FF 0%, #76F5E3 100%);
+  box-shadow: 0 0 50rpx rgba(130, 208, 255, 0.4);
 }
 
 .breathing-text {
@@ -153,6 +179,9 @@
 .breathing-hint {
   font-size: 28rpx;
   color: #B9C6E2;
+  opacity: 0.9;
+  margin-top: 24rpx;
+  transition: opacity 0.3s;
 }
 
 /* 操作按钮 */
@@ -164,6 +193,7 @@
   display: flex;
   gap: 32rpx;
   padding: 40rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
   background: #151830;
 }
 
@@ -176,12 +206,22 @@
   font-weight: 500;
   color: #FFFFFF;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .pause-btn {
+  background: linear-gradient(135deg, #FBB46F 0%, #E88E53 100%);
+  box-shadow: 0 4rpx 20rpx rgba(251, 180, 111, 0.3);
+}
+
+.pause-btn.resume {
   background: linear-gradient(135deg, #FBB46F 0%, #E88E53 100%);
 }
 
 .stop-btn {
   background: linear-gradient(135deg, #F2939B 0%, #E26678 100%);
+  box-shadow: 0 4rpx 20rpx rgba(242, 147, 155, 0.3);
 }

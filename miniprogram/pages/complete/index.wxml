@@ -13,19 +13,19 @@
   <!-- 信息卡片 -->
   <view class="info-card">
     <view class="info-item">
-      <image class="info-icon" src="/images/icons/clock.png" mode="aspectFit"></image>
+      <text class="info-icon">⏱</text>
       <text class="info-text">本次训练时长: {{duration}}</text>
     </view>
     <view class="info-item">
-      <image class="info-icon" src="/images/icons/refresh.png" mode="aspectFit"></image>
+      <text class="info-icon">🔄</text>
       <text class="info-text">今日已完成 {{todayCount}} 次训练</text>
     </view>
     <view class="info-item">
-      <image class="info-icon" src="/images/icons/calendar.png" mode="aspectFit"></image>
+      <text class="info-icon">📅</text>
       <text class="info-text">已连续打卡 {{checkInDays}} 天</text>
     </view>
     <view class="info-item">
-      <image class="info-icon" src="/images/icons/arrow-up.png" mode="aspectFit"></image>
+      <text class="info-icon">📊</text>
       <text class="info-text">累计完成 {{totalCount}} 次训练</text>
     </view>
   </view>
