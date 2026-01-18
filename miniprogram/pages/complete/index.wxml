@@ -1,32 +1,37 @@
 <!--pages/complete/index.wxml-->
 <view class="complete-page">
-  <!-- 成功图标 -->
-  <view class="success-icon">
-    <view class="icon-circle">
-      <view class="checkmark"></view>
+  <view class="content-wrapper">
+    <!-- 完成标题 -->
+    <text class="complete-title">训练完成！</text>
+    
+    <!-- 成功图标 -->
+    <view class="success-icon">
+      <view class="icon-circle">
+        <image class="checkmark" src="../../images/icons/right.svg" mode="aspectFit"></image>
+      </view>
     </view>
-  </view>
-  
-  <!-- 完成标题 -->
-  <text class="complete-title">训练完成！</text>
-  
-  <!-- 信息卡片 -->
-  <view class="info-card">
-    <view class="info-item">
-      <text class="info-icon">⏱</text>
-      <text class="info-text">本次训练时长: {{duration}}</text>
-    </view>
-    <view class="info-item">
-      <text class="info-icon">🔄</text>
-      <text class="info-text">今日已完成 {{todayCount}} 次训练</text>
-    </view>
-    <view class="info-item">
-      <text class="info-icon">📅</text>
-      <text class="info-text">已连续打卡 {{checkInDays}} 天</text>
-    </view>
-    <view class="info-item">
-      <text class="info-icon">📊</text>
-      <text class="info-text">累计完成 {{totalCount}} 次训练</text>
+    
+    <!-- 鼓励文字 -->
+    <text class="encourage-text">太棒了</text>
+    
+    <!-- 信息卡片网格 -->
+    <view class="info-grid">
+      <view class="info-card">
+        <text class="info-label">本次训练时长</text>
+        <text class="info-value">{{duration}}</text>
+      </view>
+      <view class="info-card">
+        <text class="info-label">今日完成</text>
+        <text class="info-value">{{todayCount}} 次训练</text>
+      </view>
+      <view class="info-card">
+        <text class="info-label">已连续打卡</text>
+        <text class="info-value">{{checkInDays}}天</text>
+      </view>
+      <view class="info-card">
+        <text class="info-label">累计完成</text>
+        <text class="info-value">{{totalCount}}次训练</text>
+      </view>
     </view>
   </view>
   
@@ -34,5 +39,83 @@
   <view class="action-buttons safe-area-bottom">
     <button class="action-btn back-btn" bindtap="goHome">返回首页</button>
     <button class="action-btn history-btn" bindtap="viewHistory">查看历史记录</button>
+  </view>
+
+  <!-- 订阅计划弹窗 -->
+  <view class="subscribe-modal {{showSubscribeModal ? 'show' : ''}}" catchtap="hideSubscribeModal">
+    <view class="subscribe-modal-content" catchtap="stopPropagation">
+      <view class="subscribe-header">
+        <view class="subscribe-title-section">
+          <text class="subscribe-title">练习计划</text>
+          <text class="subscribe-subtitle">选择适合您的节奏,我们会定时提醒</text>
+        </view>
+        <view class="subscribe-switch-wrapper">
+          <switch class="subscribe-switch" checked="{{subscribeEnabled}}" bindchange="toggleSubscribe" color="#5EC8FF"/>
+        </view>
+      </view>
+      
+      <!-- 每日精进 -->
+      <view class="plan-section">
+        <text class="section-label">每日精进 (DAILY)</text>
+        <view class="plan-cards">
+          <view class="plan-card {{selectedPlan === 'light' ? 'active' : ''}}" bindtap="selectPlan" data-plan="light">
+            <view class="plan-icon plan-icon-sun">☀️</view>
+            <view class="plan-info">
+              <text class="plan-title">轻量练习</text>
+              <text class="plan-subtitle">养成习惯</text>
+            </view>
+            <view class="plan-badge">1次/天</view>
+          </view>
+          
+          <view class="plan-card {{selectedPlan === 'morning' ? 'active' : ''}}" bindtap="selectPlan" data-plan="morning">
+            <view class="plan-icon plan-icon-moon">🌙</view>
+            <view class="plan-info">
+              <text class="plan-title">早晚调息</text>
+              <text class="plan-subtitle">开启与结束</text>
+            </view>
+            <view class="plan-badge">2次/天</view>
+          </view>
+          
+          <view class="plan-card {{selectedPlan === 'deep' ? 'active' : ''}}" bindtap="selectPlan" data-plan="deep">
+            <view class="plan-icon plan-icon-meditation">🧘</view>
+            <view class="plan-info">
+              <text class="plan-title">深度冥想</text>
+              <text class="plan-subtitle">精进自我</text>
+            </view>
+            <view class="plan-badge">3次/天</view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 每周节奏 -->
+      <view class="plan-section">
+        <text class="section-label">每周节奏 (WEEKLY)</text>
+        <view class="plan-cards">
+          <view class="plan-card {{selectedPlan === 'beginner' ? 'active' : ''}}" bindtap="selectPlan" data-plan="beginner">
+            <view class="plan-icon plan-icon-calendar">📅</view>
+            <view class="plan-info">
+              <text class="plan-title">初试身手</text>
+              <text class="plan-subtitle">循序渐进</text>
+            </view>
+            <view class="plan-badge">3次/周</view>
+          </view>
+          
+          <view class="plan-card {{selectedPlan === 'advanced' ? 'active' : ''}}" bindtap="selectPlan" data-plan="advanced">
+            <view class="plan-icon plan-icon-challenge">⚡</view>
+            <view class="plan-info">
+              <text class="plan-title">进阶挑战</text>
+              <text class="plan-subtitle">突破极限</text>
+            </view>
+            <view class="plan-badge">5次/周</view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 底部按钮 -->
+      <view class="subscribe-buttons">
+        <button class="subscribe-ignore-btn" bindtap="hideSubscribeModal">忽略</button>
+        <button class="subscribe-confirm-btn" bindtap="confirmSubscribe">开启提醒计划</button>
+      </view>
+    </view>
   </view>
 </view>

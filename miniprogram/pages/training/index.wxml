@@ -1,10 +1,5 @@
 <!--pages/training/index.wxml-->
 <view class="training-page">
-  <!-- 顶部标题栏 -->
-  <view class="header">
-    <text class="title">腹式呼吸</text>
-    <text class="close-btn" bindtap="handleClose">✕</text>
-  </view>
   
   <!-- 计时器模块 -->
   <view class="timer-section">
@@ -44,7 +39,7 @@
   <view class="breathing-section">
     <view 
       class="breathing-indicator {{breathingState}}"
-      style="transform: scale({{breathScale}});"
+      style="transform: scale({{breathScale}}); transition-duration: {{breathingDuration}}s;"
     >
       <text class="breathing-text">{{breathingText}}</text>
       <text class="breathing-count">{{breathingCount}}秒</text>

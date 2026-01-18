@@ -1,71 +1,208 @@
 <!--pages/home/index.wxml-->
 <view class="home-page">
+  <!-- 粒子效果容器 -->
+  <view class="particles-container">
+    <view class="particle particle-initial" wx:for="{{particles}}" wx:key="index" style="left: {{item.x}}%; top: {{item.y}}%; --delay: {{item.delay}}s; animation-duration: {{item.duration}}s; --dx: {{item.dx}}rpx; --dy: {{item.dy}}rpx; --initial-dx: {{item.initialDx}}rpx; --initial-dy: {{item.initialDy}}rpx; background: {{item.bgStyle}}; box-shadow: {{item.shadowStyle}};"></view>
+  </view>
+  <!-- 安全须知弹窗 -->
+  <view class="safety-modal {{showSafetyModal ? 'show' : ''}}" catchtap="hideSafetyModal">
+    <view class="safety-modal-content" catchtap="stopPropagation">
+      <!-- 标题 -->
+      <view class="safety-title">使用前说明</view>
+      
+      <!-- 警告提示框 -->
+      <view class="safety-warning-box">
+        <view class="safety-warning-icon">
+          <view class="safety-warning-triangle"></view>
+          <text class="safety-warning-exclamation">!</text>
+        </view>
+        <text class="safety-warning-text">本应用建议仅供参考,请使用前已详细阅读并了解内容,如有不适请立即停止使用。</text>
+      </view>
+      
+      <!-- 适应症 -->
+      <view class="safety-content-card">
+        <view class="safety-card-header">
+          <view class="safety-icon-circle safety-icon-circle-blue">
+            <text class="safety-icon-check">✓</text>
+          </view>
+          <text class="safety-card-title">适应症</text>
+        </view>
+        <view class="safety-card-content">
+          <text class="safety-card-item">慢性支气管炎患者,COPD(慢阻肺)患者,或是呼吸功能不佳的人群。</text>
+        </view>
+      </view>
+      
+      <!-- 禁忌症 -->
+      <view class="safety-content-card">
+        <view class="safety-card-header">
+          <view class="safety-icon-circle safety-icon-circle-red">
+            <text class="safety-icon-x">✕</text>
+          </view>
+          <text class="safety-card-title">禁忌症</text>
+        </view>
+        <view class="safety-card-content">
+          <text class="safety-card-item">急性呼吸道感染期,未经治疗的心衰,严重心律失常(小于4周)。</text>
+        </view>
+      </view>
+      
+      <!-- 底部确认区域 -->
+      <view class="safety-bottom-area">
+        <view class="safety-checkbox-area" bindtap="toggleSafetyAgree">
+          <view class="safety-checkbox {{safetyAgreed ? 'checked' : ''}}">
+            <text class="safety-checkbox-icon" wx:if="{{safetyAgreed}}">✓</text>
+          </view>
+          <text class="safety-checkbox-text">我已阅读并同意上述内容</text>
+        </view>
+        <button class="safety-confirm-btn {{safetyAgreed ? 'active' : ''}}" 
+                disabled="{{!safetyAgreed}}" 
+                bindtap="handleSafetyConfirm">
+          进入练习
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 订阅计划弹窗 -->
+  <view class="subscribe-modal {{showSubscribeModal ? 'show' : ''}}" catchtap="hideSubscribeModal">
+    <view class="subscribe-modal-content" catchtap="stopPropagation">
+      <view class="subscribe-header">
+        <text class="subscribe-title">提醒设置</text>
+        <view class="subscribe-close-btn" bindtap="hideSubscribeModal">
+          <text class="close-icon">✕</text>
+        </view>
+      </view>
+      
+      <!-- 每日提醒频率 -->
+      <view class="frequency-section">
+        <text class="section-label">每日提醒频率</text>
+        <view class="frequency-buttons">
+          <view class="frequency-btn {{reminderFrequency === 1 ? 'active' : ''}}" bindtap="selectFrequency" data-frequency="1">1次</view>
+          <view class="frequency-btn {{reminderFrequency === 2 ? 'active' : ''}}" bindtap="selectFrequency" data-frequency="2">2次</view>
+          <view class="frequency-btn {{reminderFrequency === 3 ? 'active' : ''}}" bindtap="selectFrequency" data-frequency="3">3次</view>
+        </view>
+      </view>
+      
+      <!-- 设置具体时间 -->
+      <view class="time-settings-section">
+        <text class="section-label">设置具体时间</text>
+        <view class="time-settings-list">
+          <view class="time-setting-item" wx:for="{{reminderTimes}}" wx:key="index" wx:if="{{index < reminderFrequency}}">
+            <text class="time-setting-label">第{{index + 1}}次提醒</text>
+            <view class="time-setting-value" bindtap="openTimePicker" data-index="{{index}}">
+              <text class="time-value-text {{item ? '' : 'time-placeholder'}}">{{item || '请选择时间'}}</text>
+              <text class="time-icon">🕐</text>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 底部按钮 -->
+      <view class="subscribe-buttons">
+        <button class="subscribe-ignore-btn" bindtap="hideSubscribeModal">忽略</button>
+        <button class="subscribe-confirm-btn" bindtap="confirmSubscribe">保存设置</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提醒时间选择器弹窗 -->
+  <view class="reminder-time-picker-modal {{showTimePicker ? 'show' : ''}}" catchtap="hideTimePicker">
+    <view class="reminder-time-picker-wrapper" catchtap="stopPropagation">
+      <view class="reminder-picker-card">
+        <view class="reminder-picker-title">选择提醒时间</view>
+        <picker mode="time" value="{{reminderTimes[currentTimeIndex]}}" bindchange="onTimePickerChange">
+          <view class="reminder-picker-time-display">
+            <text class="reminder-picker-time-value">{{reminderTimes[currentTimeIndex]}}</text>
+          </view>
+        </picker>
+        <view class="reminder-picker-action-buttons">
+          <button class="reminder-picker-cancel-btn" bindtap="hideTimePicker">取消</button>
+          <button class="reminder-picker-confirm-btn" bindtap="hideTimePicker">确定</button>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 时间选择区 -->
   <view class="time-section">
-    <view class="time-display" bindtap="showTimePicker">
-      <text class="time-value">{{timeDisplay || formatTime(duration)}}</text>
-      <text class="time-hint">点击这里切换时间</text>
+    <view class="time-display-wrapper">
+      <view class="time-display" bindtap="showTimePicker">
+        <text class="time-value">{{timeDisplay || formatTime(duration)}}</text>
+        <text class="time-hint">点击这里切换时间</text>
+      </view>
+      <view class="bell-icon-wrapper" bindtap="showSubscribeModal">
+        <view class="bell-icon">
+          <image class="bell-svg" src="../../images/icons/bell-icon.svg" mode="aspectFit"></image>
+        </view>
+      </view>
     </view>
     
     <!-- 时间选择器弹窗 -->
     <view class="time-picker-modal {{showTimePicker ? 'show' : ''}}" catchtap="hideTimePicker">
       <view class="time-picker-wrapper" catchtap="stopPropagation">
-        <!-- 顶部时间显示 -->
-        <view class="picker-time-display">
-          <text class="picker-time-value">{{formatTime(duration)}}</text>
-          <text class="picker-time-hint">点击这里切换时间</text>
-        </view>
-        
         <!-- 半透明卡片 -->
         <view class="picker-card">
-          <view class="slider-container">
-            <slider 
-              value="{{duration}}" 
-              min="5" 
-              max="30" 
-              step="1"
-              activeColor="#8F8EE4"
-              backgroundColor="#5D5C80"
-              block-color="#FFFFFF"
-              block-size="24"
-              bindchange="onSliderChange"
-              show-value="{{false}}"
-            />
-            <view class="slider-labels">
-              <text>5分钟</text>
-              <text>30分钟</text>
+          <view class="picker-title">练习时长设置</view>
+          
+          <view class="duration-selector">
+            <text class="duration-label">时长选择</text>
+            <view class="slider-wrapper">
+              <view class="slider-value-display">{{duration}} 分钟</view>
+              <view class="slider-labels-mini">
+                <text>1分</text>
+                <text>60分</text>
+              </view>
+              <slider 
+                value="{{duration}}" 
+                min="1" 
+                max="60" 
+                step="1"
+                activeColor="#5EC8FF"
+                backgroundColor="#5D5C80"
+                block-color="#5EC8FF"
+                block-size="24"
+                bindchange="onSliderChange"
+                show-value="{{false}}"
+              />
             </view>
           </view>
           
-          <view class="quick-buttons">
+          <view class="quick-buttons-grid">
             <view 
               class="quick-btn {{duration === 5 ? 'active' : ''}}"
               bindtap="setDuration"
               data-duration="5"
-            >5</view>
+            >5分</view>
             <view 
               class="quick-btn {{duration === 10 ? 'active' : ''}}"
               bindtap="setDuration"
               data-duration="10"
-            >10</view>
+            >10分</view>
             <view 
               class="quick-btn {{duration === 15 ? 'active' : ''}}"
               bindtap="setDuration"
               data-duration="15"
-            >15</view>
+            >15分</view>
             <view 
               class="quick-btn {{duration === 20 ? 'active' : ''}}"
               bindtap="setDuration"
               data-duration="20"
-            >20</view>
+            >20分</view>
             <view 
               class="quick-btn {{duration === 30 ? 'active' : ''}}"
               bindtap="setDuration"
               data-duration="30"
-            >30</view>
+            >30分</view>
+            <view 
+              class="quick-btn {{duration === 60 ? 'active' : ''}}"
+              bindtap="setDuration"
+              data-duration="60"
+            >60分</view>
           </view>
           
-          <button class="picker-confirm-btn" bindtap="confirmTime">完成</button>
+          <view class="picker-action-buttons">
+            <button class="picker-cancel-btn" bindtap="hideTimePicker">取消</button>
+            <button class="picker-confirm-btn" bindtap="confirmTime">确定</button>
+          </view>
         </view>
       </view>
     </view>
@@ -73,66 +210,109 @@
   
   <!-- 呼吸节奏选择区 -->
   <view class="rhythm-section">
-    <view class="section-header">
-      <text class="section-title">呼吸节奏</text>
-      <text class="edit-icon" bindtap="editRhythm">✎</text>
-    </view>
-    
     <view class="rhythm-display" bindtap="editRhythm">
       <view class="rhythm-item rhythm-inhale">
         <text class="rhythm-label">吸气</text>
         <text class="rhythm-time">{{rhythm.inhale}}s</text>
       </view>
-      <text class="rhythm-arrow">→</text>
       <view class="rhythm-item rhythm-exhale">
         <text class="rhythm-label">呼气</text>
         <text class="rhythm-time">{{rhythm.exhale}}s</text>
       </view>
-      <text class="rhythm-arrow">→</text>
       <view class="rhythm-item rhythm-hold">
-        <text class="rhythm-label">屏息</text>
+        <text class="rhythm-label">保持</text>
         <text class="rhythm-time">{{rhythm.hold}}s</text>
       </view>
     </view>
     
-    <text class="rhythm-hint" bindtap="editRhythm">点击自定义呼吸节奏</text>
+    <text class="rhythm-hint" bindtap="editRhythm">点击自定义呼吸节奏 ></text>
     
     <!-- 呼吸节奏编辑弹窗 -->
     <view class="rhythm-modal {{showRhythmEditor ? 'show' : ''}}" catchtap="hideRhythmEditor">
       <view class="rhythm-editor-content" catchtap="stopPropagation">
         <view class="editor-header">
           <text class="editor-title">自定义呼吸节奏</text>
-          <text class="editor-close" bindtap="hideRhythmEditor">✕</text>
         </view>
         
         <view class="rhythm-editor-item">
-          <text class="editor-label">吸气时长（秒）</text>
-          <view class="editor-controls">
-            <button class="editor-btn" bindtap="adjustRhythm" data-type="inhale" data-delta="-1">-</button>
-            <text class="editor-value">{{tempRhythm.inhale}}</text>
-            <button class="editor-btn" bindtap="adjustRhythm" data-type="inhale" data-delta="1">+</button>
+          <view class="editor-label-row">
+            <text class="editor-label">吸气时间</text>
+            <text class="editor-value-display">{{tempRhythm.inhale}} 秒</text>
+          </view>
+          <view class="editor-slider-wrapper">
+            <slider 
+              value="{{tempRhythm.inhale}}" 
+              min="1" 
+              max="15" 
+              step="1"
+              activeColor="#324D7A"
+              backgroundColor="#5D5C80"
+              block-color="rgb(79, 110, 247)"
+              block-size="24"
+              bindchange="onInhaleChange"
+              show-value="{{false}}"
+            />
+            <view class="slider-labels-mini">
+              <text>1s</text>
+              <text>15s</text>
+            </view>
           </view>
         </view>
         
         <view class="rhythm-editor-item">
-          <text class="editor-label">呼气时长（秒）</text>
-          <view class="editor-controls">
-            <button class="editor-btn" bindtap="adjustRhythm" data-type="exhale" data-delta="-1">-</button>
-            <text class="editor-value">{{tempRhythm.exhale}}</text>
-            <button class="editor-btn" bindtap="adjustRhythm" data-type="exhale" data-delta="1">+</button>
+          <view class="editor-label-row">
+            <text class="editor-label">呼气时间</text>
+            <text class="editor-value-display">{{tempRhythm.exhale}} 秒</text>
+          </view>
+          <view class="editor-slider-wrapper">
+            <slider 
+              value="{{tempRhythm.exhale}}" 
+              min="1" 
+              max="15" 
+              step="1"
+              activeColor="#72AFFF"
+              backgroundColor="#5D5C80"
+              block-color="rgb(79, 209, 197)"
+              block-size="24"
+              bindchange="onExhaleChange"
+              show-value="{{false}}"
+            />
+            <view class="slider-labels-mini">
+              <text>1s</text>
+              <text>15s</text>
+            </view>
           </view>
         </view>
         
         <view class="rhythm-editor-item">
-          <text class="editor-label">屏息时长（秒）</text>
-          <view class="editor-controls">
-            <button class="editor-btn" bindtap="adjustRhythm" data-type="hold" data-delta="-1">-</button>
-            <text class="editor-value">{{tempRhythm.hold}}</text>
-            <button class="editor-btn" bindtap="adjustRhythm" data-type="hold" data-delta="1">+</button>
+          <view class="editor-label-row">
+            <text class="editor-label">保持时间</text>
+            <text class="editor-value-display">{{tempRhythm.hold}} 秒</text>
+          </view>
+          <view class="editor-slider-wrapper">
+            <slider 
+              value="{{tempRhythm.hold}}" 
+              min="1" 
+              max="15" 
+              step="1"
+              activeColor="#FF82B7"
+              backgroundColor="#5D5C80"
+              block-color="rgb(246, 135, 179)"
+              block-size="24"
+              bindchange="onHoldChange"
+              show-value="{{false}}"
+            />
+            <view class="slider-labels-mini">
+              <text>1s</text>
+              <text>15s</text>
+            </view>
           </view>
         </view>
         
-        <button class="editor-confirm-btn" bindtap="confirmRhythm">完成</button>
+        <view class="editor-buttons">
+          <button class="editor-cancel-btn" bindtap="hideRhythmEditor">取消</button>
+          <button class="editor-save-btn" bindtap="confirmRhythm">保存设置</button>
+        </view>
       </view>
     </view>
   </view>

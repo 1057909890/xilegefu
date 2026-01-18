@@ -102,7 +102,7 @@ Page({
     // 注意：订阅消息需要在app.json中配置模板ID
     // 这里使用示例模板ID，实际使用时需要替换为真实的模板ID
     wx.requestSubscribeMessage({
-      tmplIds: ['your-template-id-1', 'your-template-id-2'], // 替换为实际模板ID
+      tmplIds: ['YUP2qo8lHFjeWTaJiEuBLRUbL9sKMUXbd9x6aedI5SA'], 
       success: (res) => {
         console.log('订阅成功', res)
         

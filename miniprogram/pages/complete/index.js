@@ -4,7 +4,10 @@ Page({
     duration: '00:00',
     todayCount: 0,
     checkInDays: 0,
-    totalCount: 0
+    totalCount: 0,
+    showSubscribeModal: false,
+    subscribeEnabled: true,
+    selectedPlan: 'light'
   },
 
   onLoad(options) {
@@ -25,18 +28,24 @@ Page({
 
   // 加载统计数据
   async loadStatistics() {
+    // 检查云开发是否初始化
+    if (!wx.cloud) {
+      console.error('云开发未初始化')
+      return
+    }
+
     try {
       const db = wx.cloud.database()
       const _ = db.command
       
       // 获取今日训练次数
+      // 使用 date 字段查询，因为保存时使用的是 new Date()
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      const todayStart = today.getTime()
-      
+      // 微信云数据库支持 Date 对象的直接比较
       const todayRecords = await db.collection('training_records')
         .where({
-          date: _.gte(todayStart)
+          date: _.gte(today)
         })
         .count()
       
@@ -52,8 +61,36 @@ Page({
         totalCount: totalRecords.total,
         checkInDays: checkInDays
       })
+      
+      // 如果今日记录为0，可能是数据还没同步，延迟500ms后重试一次
+      if (todayRecords.total === 0) {
+        setTimeout(async () => {
+          try {
+            const retryTodayRecords = await db.collection('training_records')
+              .where({
+                date: _.gte(today)
+              })
+              .count()
+            
+            if (retryTodayRecords.total > 0) {
+              this.setData({
+                todayCount: retryTodayRecords.total
+              })
+            }
+          } catch (retryErr) {
+            console.error('重试加载今日记录失败', retryErr)
+          }
+        }, 500)
+      }
     } catch (err) {
       console.error('加载统计数据失败', err)
+      // 如果是 access_token 错误，提示用户
+      if (err.errMsg && err.errMsg.includes('access_token')) {
+        console.error('云开发环境未正确初始化，请检查：')
+        console.error('1. 是否已开通云开发')
+        console.error('2. 环境ID是否正确')
+        console.error('3. 是否已部署 quickstartFunctions 云函数')
+      }
     }
   },
 
@@ -96,18 +133,135 @@ Page({
 
   // 检查是否需要显示订阅提示
   checkSubscribePrompt() {
-    // 检查是否首次完成训练
+    // 检查是否首次完成训练且未设置订阅
     const hasShownSubscribe = wx.getStorageSync('hasShownSubscribe')
-    if (!hasShownSubscribe) {
-      // 延迟显示，避免与完成页冲突
+    const subscribeSettings = wx.getStorageSync('subscribeSettings')
+    if (!hasShownSubscribe && !subscribeSettings) {
+      // 延迟显示订阅弹窗，避免与完成页冲突
       setTimeout(() => {
-        wx.navigateTo({
-          url: '/pages/subscribe/index'
+        this.setData({
+          showSubscribeModal: true
         })
-        wx.setStorageSync('hasShownSubscribe', true)
       }, 2000)
     }
   },
+
+  // 订阅相关方法
+  hideSubscribeModal() {
+    this.setData({
+      showSubscribeModal: false
+    })
+    // 标记已显示过订阅弹窗
+    wx.setStorageSync('hasShownSubscribe', true)
+  },
+
+  toggleSubscribe(e) {
+    this.setData({
+      subscribeEnabled: e.detail.value
+    })
+  },
+
+  selectPlan(e) {
+    const plan = e.currentTarget.dataset.plan
+    this.setData({
+      selectedPlan: plan
+    })
+  },
+
+  confirmSubscribe() {
+    if (!this.data.subscribeEnabled) {
+      wx.showToast({
+        title: '请先开启提醒',
+        icon: 'none'
+      })
+      return
+    }
+
+    // 保存订阅设置
+    const planMap = {
+      'light': { type: 'daily', times: 1 },
+      'morning': { type: 'daily', times: 2 },
+      'deep': { type: 'daily', times: 3 },
+      'beginner': { type: 'weekly', times: 3 },
+      'advanced': { type: 'weekly', times: 5 }
+    }
+    
+    const selected = planMap[this.data.selectedPlan]
+    wx.setStorageSync('subscribeSettings', {
+      enabled: this.data.subscribeEnabled,
+      plan: this.data.selectedPlan,
+      type: selected.type,
+      times: selected.times
+    })
+    
+    // 调用订阅消息
+    this.subscribeMessage(selected)
+    
+    // 标记已显示过订阅
+    wx.setStorageSync('hasShownSubscribe', true)
+    
+    // 关闭弹窗
+    this.setData({
+      showSubscribeModal: false
+    })
+    
+    wx.showToast({
+      title: '提醒计划已开启',
+      icon: 'success'
+    })
+  },
+
+  subscribeMessage(plan) {
+    // 调用微信订阅消息接口
+    wx.requestSubscribeMessage({
+      tmplIds: ['YUP2qo8lHFjeWTaJiEuBLSI0W_5zsYzPTEHmZ6tjZAQ'],
+      success: async (res) => {
+        console.log('订阅成功', res)
+        // 保存订阅设置到云数据库
+        const db = wx.cloud.database()
+        const userInfo = wx.getStorageSync('userInfo') || {}
+        
+        // 检查是否已存在该用户的订阅设置
+        const existingSetting = await db.collection('subscribe_settings').where({
+          openid: userInfo.openid
+        }).get()
+
+        if (existingSetting.data.length > 0) {
+          // 更新现有记录
+          await db.collection('subscribe_settings').doc(existingSetting.data[0]._id).update({
+            data: {
+              enabled: this.data.subscribeEnabled,
+              plan: this.data.selectedPlan,
+              type: plan.type,
+              times: plan.times,
+              subscribeResult: res,
+              updateTime: db.serverDate()
+            }
+          })
+        } else {
+          // 添加新记录
+          await db.collection('subscribe_settings').add({
+            data: {
+              enabled: this.data.subscribeEnabled,
+              plan: this.data.selectedPlan,
+              type: plan.type,
+              times: plan.times,
+              subscribeResult: res,
+              openid: userInfo.openid || '',
+              createTime: db.serverDate(),
+              updateTime: db.serverDate()
+            }
+          })
+        }
+      },
+      fail: (err) => {
+        console.error('订阅失败', err)
+      }
+    })
+  },
+
+  // 阻止事件冒泡
+  stopPropagation() {},
 
   // 返回首页
   goHome() {

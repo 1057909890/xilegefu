@@ -1,4 +1,7 @@
 /* pages/safety/index.wxss */
+wx-button{
+  padding:0;
+}
 .safety-page {
   min-height: 100vh;
   background: #EEF2FB;

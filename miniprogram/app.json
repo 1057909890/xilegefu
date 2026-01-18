@@ -1,6 +1,5 @@
 {
   "pages": [
-    "pages/safety/index",
     "pages/home/index",
     "pages/training/index",
     "pages/complete/index",

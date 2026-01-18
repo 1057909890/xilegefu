@@ -1,7 +1,11 @@
 <!--pages/history/index.wxml-->
 <view class="history-page">
-  <view class="header">
+  <view class="header" style="padding-top: {{headerPaddingTop}}rpx;">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">‹</text>
+    </view>
     <text class="title">训练历史</text>
+    <view class="header-placeholder"></view>
   </view>
   
   <!-- 统计卡片 -->
