@@ -274,8 +274,30 @@ exports.main = async (event, context) => {
           console.log(`[定时提醒] ✅✅✅ 成功发送提醒给用户: ${userOpenid}, 频率: ${frequency}次/天, 时间: ${matchedTime.hour}:${String(matchedTime.minute).padStart(2, '0')}`)
         } catch (err) {
           failCount++
-          console.error(`[定时提醒] ❌❌❌ 发送提醒失败，用户: ${userOpenid}`, err)
-          console.error(`[定时提醒] 错误代码: ${err.errCode}, 错误信息: ${err.errMsg || err.message}`)
+          const errCode = err.errCode || err.errCode
+          const errMsg = err.errMsg || err.message || ''
+          
+          console.error(`[定时提醒] ❌❌❌ 发送提醒失败，用户: ${userOpenid}`)
+          console.error(`[定时提醒] 错误代码: ${errCode}, 错误信息: ${errMsg}`)
+          
+          // 如果是用户拒绝订阅消息（43101），更新数据库状态
+          if (errCode === 43101) {
+            try {
+              await db.collection('subscribe_settings')
+                .doc(setting._id)
+                .update({
+                  data: {
+                    [`subscribeResult.${templateId}`]: 'reject',
+                    updateTime: db.serverDate()
+                  }
+                })
+              console.log(`[定时提醒] ⚠️ 用户 ${userOpenid} 已拒绝订阅消息，已更新数据库状态为 reject`)
+              console.log(`[定时提醒] 提示：用户需要在小程序中重新授权订阅消息才能收到提醒`)
+            } catch (updateErr) {
+              console.error(`[定时提醒] 更新数据库状态失败:`, updateErr)
+            }
+          }
+          
           if (err.stack) {
             console.error(`[定时提醒] 错误堆栈:`, err.stack)
           }

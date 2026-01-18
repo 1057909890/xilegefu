@@ -367,6 +367,59 @@ Page({
     })
   },
 
+  // 确保用户已登录（使用微信快捷登录）
+  ensureLogin() {
+    return new Promise((resolve, reject) => {
+      // 检查是否已有用户信息
+      const userInfo = wx.getStorageSync('userInfo')
+      if (userInfo && userInfo.openid) {
+        console.log('用户已登录', userInfo.openid)
+        resolve(userInfo)
+        return
+      }
+
+      // 检查云开发是否初始化
+      if (!wx.cloud) {
+        reject(new Error('云开发未初始化'))
+        return
+      }
+
+      // 调用云函数获取 openid（微信快捷登录）
+      wx.cloud.callFunction({
+        name: 'quickstartFunctions',
+        data: {
+          type: 'getOpenId'
+        },
+        success: (res) => {
+          console.log('获取openid成功', res)
+          if (res.result && res.result.openid) {
+            // 保存用户信息到本地存储
+            const userInfo = {
+              openid: res.result.openid,
+              appid: res.result.appid,
+              unionid: res.result.unionid || ''
+            }
+            wx.setStorageSync('userInfo', userInfo)
+            
+            // 更新全局数据
+            if (app.globalData) {
+              app.globalData.userInfo = userInfo
+            }
+            
+            console.log('登录成功，openid:', userInfo.openid)
+            resolve(userInfo)
+          } else {
+            reject(new Error('未获取到 openid'))
+          }
+        },
+        fail: (err) => {
+          console.error('获取openid失败', err)
+          reject(err)
+        }
+      })
+    })
+  },
+
   toggleSubscribe(e) {
     this.setData({
       subscribeEnabled: e.detail.value
@@ -422,7 +475,30 @@ Page({
     })
   },
 
-  confirmSubscribe() {
+  async confirmSubscribe() {
+    // 检查用户是否已登录
+    const userInfo = wx.getStorageSync('userInfo')
+    if (!userInfo || !userInfo.openid) {
+      // 用户未登录，先进行登录
+      wx.showLoading({
+        title: '正在登录...',
+        mask: true
+      })
+      
+      try {
+        await this.ensureLogin()
+        wx.hideLoading()
+      } catch (err) {
+        wx.hideLoading()
+        console.error('登录失败', err)
+        wx.showToast({
+          title: '登录失败，请重试',
+          icon: 'none'
+        })
+        return
+      }
+    }
+
     // 验证频率是否已选择
     if (!this.data.reminderFrequency || this.data.reminderFrequency < 1) {
       wx.showToast({

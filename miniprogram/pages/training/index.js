@@ -35,6 +35,17 @@ Page({
   },
 
   onLoad(options) {
+    // 保持屏幕常亮，避免训练时息屏
+    wx.setKeepScreenOn({
+      keepScreenOn: true,
+      success: () => {
+        console.log('屏幕常亮已开启')
+      },
+      fail: (err) => {
+        console.error('开启屏幕常亮失败', err)
+      }
+    })
+    
     // 获取参数
     const duration = parseInt(options.duration) || 10
     let inhale = parseInt(options.inhale) || 3
@@ -74,6 +85,17 @@ Page({
   },
 
   onUnload() {
+    // 关闭屏幕常亮
+    wx.setKeepScreenOn({
+      keepScreenOn: false,
+      success: () => {
+        console.log('屏幕常亮已关闭')
+      },
+      fail: (err) => {
+        console.error('关闭屏幕常亮失败', err)
+      }
+    })
+    
     // 清理定时器
     this.clearTimers()
   },
