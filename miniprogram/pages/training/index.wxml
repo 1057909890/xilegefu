@@ -1,62 +1,92 @@
 <!--pages/training/index.wxml-->
-<view class="training-page">
-  
-  <!-- 计时器模块 -->
-  <view class="timer-section">
-    <view class="progress-ring">
-      <canvas 
-        class="progress-canvas" 
-        type="2d"
-        id="progressCanvas"
-        style="width: 400rpx; height: 400rpx;"
-      ></canvas>
-      <view class="timer-content">
-        <text class="timer-text {{isPaused ? 'paused' : ''}}">{{timeDisplay}}</text>
-        <text class="timer-label">剩余</text>
+<view class="intro-wrap">
+  <view class="training-page">
+    
+    <!-- 计时器模块 -->
+    <view class="timer-section">
+      <view class="progress-ring">
+        <!-- 说明弹窗打开时卸掉 canvas，避免原生层压盖；关闭后再 initCanvas 重绘 -->
+        <canvas
+          wx:if="{{!showIntroTip}}"
+          class="progress-canvas"
+          type="2d"
+          id="progressCanvas"
+          style="width: 400rpx; height: 400rpx;"
+        ></canvas>
+        <view wx:else class="progress-canvas-placeholder"></view>
+        <view class="timer-content">
+          <text class="timer-text {{isPaused ? 'paused' : ''}}">{{timeDisplay}}</text>
+          <text class="timer-label">剩余</text>
+        </view>
+      </view>
+      
+      <!-- 数据栏 -->
+      <view class="stats-bar">
+        <view class="stat-item">
+          <text class="stat-label">已训练时长</text>
+          <text class="stat-value">{{elapsedTime}}</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-label">完成循环数</text>
+          <text class="stat-value">{{cycleCount}}</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-label">总时长</text>
+          <text class="stat-value">{{totalTime}}</text>
+        </view>
       </view>
     </view>
     
-    <!-- 数据栏 -->
-    <view class="stats-bar">
-      <view class="stat-item">
-        <text class="stat-label">已训练时长</text>
-        <text class="stat-value">{{elapsedTime}}</text>
+    <!-- 呼吸引导模块 -->
+    <view class="breathing-section">
+      <view 
+        class="breathing-indicator {{breathingState}}"
+        style="transform: scale({{breathScale}}); transition-duration: {{breathingDuration}}s;"
+      >
+        <text class="breathing-text">{{breathingText}}</text>
+        <text class="breathing-count">{{breathingCount}}秒</text>
       </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-label">完成循环数</text>
-        <text class="stat-value">{{cycleCount}}</text>
+      <text class="breathing-hint">{{breathingHint}}</text>
+    </view>
+    
+    <!-- 语音提示 + 说明（右下角纵向） -->
+    <view class="fab-stack">
+      <view class="fab-btn" bindtap="toggleVoice" hover-class="fab-btn-hover">
+        <image
+          class="fab-btn-icon"
+          src="{{voiceOn ? '/images/icons/laba.svg' : '/images/icons/laba2.svg'}}"
+          mode="aspectFit"
+        />
       </view>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-label">总时长</text>
-        <text class="stat-value">{{totalTime}}</text>
+      <view class="fab-btn" bindtap="openIntroTip" hover-class="fab-btn-hover">
+        <image class="fab-btn-icon" src="/images/icons/tip1.svg" mode="aspectFit" />
       </view>
     </view>
-  </view>
-  
-  <!-- 呼吸引导模块 -->
-  <view class="breathing-section">
-    <view 
-      class="breathing-indicator {{breathingState}}"
-      style="transform: scale({{breathScale}}); transition-duration: {{breathingDuration}}s;"
-    >
-      <text class="breathing-text">{{breathingText}}</text>
-      <text class="breathing-count">{{breathingCount}}秒</text>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons safe-area-bottom">
+      <button 
+        class="action-btn pause-btn {{isPaused ? 'resume' : ''}}" 
+        bindtap="togglePause"
+      >
+        <text>{{isPaused ? '继续' : '暂停'}}</text>
+      </button>
+      <button class="action-btn stop-btn" bindtap="handleStop">
+        <text>停止</text>
+      </button>
     </view>
-    <text class="breathing-hint">{{breathingHint}}</text>
   </view>
-  
-  <!-- 操作按钮 -->
-  <view class="action-buttons safe-area-bottom">
-    <button 
-      class="action-btn pause-btn {{isPaused ? 'resume' : ''}}" 
-      bindtap="togglePause"
-    >
-      <text>{{isPaused ? '继续' : '暂停'}}</text>
-    </button>
-    <button class="action-btn stop-btn" bindtap="handleStop">
-      <text>停止</text>
-    </button>
+
+  <!-- 普通 view + image：canvas 已卸掉时可盖住全屏；真机图片用绝对路径 -->
+  <view wx:if="{{showIntroTip}}" class="intro-pop-root">
+    <view class="intro-pop-mask" bindtap="closeIntroTip"></view>
+    <view class="intro-pop-panel" catchtap="noop">
+      <view class="intro-pop-close" bindtap="closeIntroTip">×</view>
+      <scroll-view scroll-y class="intro-pop-scroll">
+        <image class="intro-pop-img" src="/images/intro.jpg" mode="widthFix" />
+      </scroll-view>
+    </view>
   </view>
 </view>

@@ -31,10 +31,19 @@ Page({
     inhaleTimer: null,
     holdTimer: null,
     exhaleTimer: null,
-    progressCanvas: null
+    progressCanvas: null,
+    completionHandled: false,
+    voiceOn: true,
+    showIntroTip: false
   },
 
   onLoad(options) {
+    this.initVoicePlayer()
+    const voiceSaved = wx.getStorageSync('trainingVoiceOn')
+    if (voiceSaved === false) {
+      this.setData({ voiceOn: false })
+    }
+
     // 保持屏幕常亮，避免训练时息屏
     wx.setKeepScreenOn({
       keepScreenOn: true,
@@ -98,7 +107,88 @@ Page({
     
     // 清理定时器
     this.clearTimers()
+    this.stopAndDestroyVoicePlayer()
   },
+
+  // 初始化语音播放器
+  initVoicePlayer() {
+    this.voicePlayer = wx.createInnerAudioContext()
+    this.voicePlayer.autoplay = false
+  },
+
+  // 停止并销毁语音播放器
+  stopAndDestroyVoicePlayer() {
+    if (!this.voicePlayer) return
+    try {
+      this.voicePlayer.stop()
+      this.voicePlayer.offEnded()
+      this.voicePlayer.offError()
+      this.voicePlayer.destroy()
+    } catch (err) {
+      console.warn('销毁语音播放器失败', err)
+    }
+    this.voicePlayer = null
+  },
+
+  // 播放阶段语音
+  playVoiceByStage(stage, options = {}) {
+    const { onEnded } = options
+    if (!this.data.voiceOn) {
+      if (typeof onEnded === 'function') onEnded()
+      return
+    }
+    if (!this.voicePlayer) return
+
+    const audioMap = {
+      inhale: '/assets/audio/xiqi.mp3',
+      exhale: '/assets/audio/huqi.mp3',
+      hold: '/assets/audio/hold.mp3',
+      complete: '/assets/audio/complete.mp3'
+    }
+    const src = audioMap[stage]
+    if (!src) return
+
+    this.voicePlayer.stop()
+    this.voicePlayer.src = src
+    this.voicePlayer.offEnded()
+    this.voicePlayer.offError()
+
+    if (typeof onEnded === 'function') {
+      this.voicePlayer.onEnded(() => {
+        onEnded()
+      })
+    }
+
+    this.voicePlayer.onError((err) => {
+      console.error('语音播放失败', err)
+      if (typeof onEnded === 'function') onEnded()
+    })
+    this.voicePlayer.play()
+  },
+
+  toggleVoice() {
+    const voiceOn = !this.data.voiceOn
+    this.setData({ voiceOn })
+    wx.setStorageSync('trainingVoiceOn', voiceOn)
+    if (!voiceOn && this.voicePlayer) {
+      try {
+        this.voicePlayer.stop()
+      } catch (e) {}
+    }
+  },
+
+  openIntroTip() {
+    this.setData({ showIntroTip: true, progressCanvas: null })
+  },
+
+  closeIntroTip() {
+    this.setData({ showIntroTip: false }, () => {
+      const run = wx.nextTick || ((fn) => setTimeout(fn, 0))
+      run(() => this.initCanvas())
+    })
+  },
+
+  noop() {},
 
   // 初始化进度环画布
   initCanvas() {
@@ -125,8 +215,10 @@ Page({
         this.setData({
           progressCanvas: { canvas, ctx, width, height }
         })
-        
-        this.drawProgress(1)
+
+        const td = this.data.totalDuration
+        const progress = td > 0 ? this.data.remainingTime / td : 1
+        this.drawProgress(progress)
       })
   },
 
@@ -174,7 +266,8 @@ Page({
   startTraining() {
     this.setData({
       isRunning: true,
-      isPaused: false
+      isPaused: false,
+      completionHandled: false
     })
     
     // 开始计时
@@ -273,6 +366,7 @@ Page({
       breathScale: 0.8,
       breathingDuration: this.data.inhale
     })
+    this.playVoiceByStage('inhale')
     
     // 使用setTimeout确保CSS transition生效
     setTimeout(() => {
@@ -296,6 +390,7 @@ Page({
       breathingDuration: 0 // 无动画
       // breathScale 保持不变，不更新
     })
+    this.playVoiceByStage('hold')
     
     // 倒计时更新
     this.startCountdown(this.data.hold)
@@ -312,6 +407,7 @@ Page({
       breathScale: 1.2,
       breathingDuration: this.data.exhale
     })
+    this.playVoiceByStage('exhale')
     
     // 使用setTimeout确保CSS transition生效
     setTimeout(() => {
@@ -382,6 +478,7 @@ Page({
       success: (res) => {
         if (res.confirm) {
           this.clearTimers()
+          this.stopAndDestroyVoicePlayer()
           wx.navigateBack()
         }
       }
@@ -397,24 +494,33 @@ Page({
         success: (res) => {
           if (res.confirm) {
             this.clearTimers()
+            this.stopAndDestroyVoicePlayer()
             wx.navigateBack()
           }
         }
       })
     } else {
+      this.stopAndDestroyVoicePlayer()
       wx.navigateBack()
     }
   },
 
   // 完成训练
   completeTraining() {
+    if (this.data.completionHandled) return
+    this.setData({ completionHandled: true })
+
     this.clearTimers()
     
     // 保存训练记录，等待保存完成后再跳转
     this.saveTrainingRecord(() => {
-      // 跳转到完成页
-      wx.redirectTo({
-        url: `/pages/complete/index?duration=${this.data.totalDuration}&elapsed=${this.data.totalDuration}&cycles=${this.data.cycleCount}`
+      this.playVoiceByStage('complete', {
+        onEnded: () => {
+          // 跳转到完成页
+          wx.redirectTo({
+            url: `/pages/complete/index?duration=${this.data.totalDuration}&elapsed=${this.data.totalDuration}&cycles=${this.data.cycleCount}`
+          })
+        }
       })
     })
   },

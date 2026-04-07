@@ -2,12 +2,33 @@
 .history-page {
   min-height: 100vh;
   background: linear-gradient(180deg, #DDEEF9 0%, #EAF7FE 100%);
-  padding: 40rpx;
+  padding:0 40rpx 40rpx;
   box-sizing: border-box;
 }
 
 .header {
   margin-bottom: 40rpx;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back-btn,
+.header-placeholder {
+  width: 56rpx;
+  height: 56rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon {
+  font-size: 52rpx;
+  line-height: 1;
+  color: #323333;
 }
 
 .title {

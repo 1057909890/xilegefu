@@ -86,7 +86,7 @@
   padding: 360rpx 0 100rpx;
   text-align: center;
   position: relative;
-  z-index: 1;
+  z-index: 4;
 }
 
 .time-display-wrapper {
@@ -152,11 +152,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.6);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  backdrop-filter: blur(20rpx);
 }
 
 .time-picker-modal.show {
@@ -175,12 +176,14 @@
 
 .picker-card {
   width: 100%;
-  background: rgba(60, 59, 94, 0.95);
+  background: rgba(60, 59, 94, 1);
   border-radius: 32rpx;
   padding: 60rpx 40rpx;
   box-sizing: border-box;
   backdrop-filter: blur(20rpx);
   box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .picker-title {
@@ -444,7 +447,7 @@
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 3000; /* 提高z-index，确保在开始按钮之上 */
+  z-index: 2000; /* 与其他弹窗保持一致 */
   padding: 40rpx;
   box-sizing: border-box;
 }
@@ -457,18 +460,19 @@
   width: 90%;
   max-width: 680rpx;
   max-height: 70vh; /* 限制最大高度，确保底部按钮区域可见 */
-  background: rgba(30, 30, 69, 0.8);
+  background: rgba(30, 30, 69, 0.95);
   border-radius: 32rpx;
   padding: 40rpx 32rpx;
   padding-bottom: 50rpx; /* 底部留出更多空间，确保按钮可见 */
   box-sizing: border-box;
   backdrop-filter: blur(20rpx);
-  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.5);
   border:1px solid rgb(255 255 255 / 0.1);
   overflow-y: auto; /* 内容过多时可以滚动 */
   display: flex;
   flex-direction: column;
   position: relative;
+  z-index: 10001; /* 确保内容在弹窗背景之上 */
   /* 确保滚动时按钮区域可见 */
   scroll-padding-bottom: 100rpx;
 }
@@ -697,6 +701,74 @@
   z-index: 2;
   letter-spacing: 0;
   text-shadow: 0 0 20rpx rgba(255, 255, 255, 0.6);
+}
+
+.phone-login-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2200;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.phone-login-modal.show {
+  display: flex;
+}
+
+.phone-login-content {
+  width: 100%;
+  max-width: 640rpx;
+  background: #1E1C33;
+  border-radius: 28rpx;
+  padding: 40rpx 32rpx;
+  box-sizing: border-box;
+}
+
+.phone-login-title {
+  font-size: 38rpx;
+  color: #fff;
+  font-weight: 600;
+}
+
+.phone-login-desc {
+  margin-top: 20rpx;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.phone-login-actions {
+  margin-top: 36rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.phone-login-cancel,
+.phone-login-confirm {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  border-radius: 42rpx;
+  font-size: 30rpx;
+  padding: 0;
+  border: none;
+}
+
+.phone-login-cancel {
+  background: #3C3B5E;
+  color: #fff;
+}
+
+.phone-login-confirm {
+  background: linear-gradient(to right, #5EC8FF 0%, #4FD4D4 100%);
+  color: #fff;
 }
 
 /* 安全须知弹窗 */
@@ -1209,4 +1281,32 @@
   border: none;
   box-shadow: 0 4rpx 20rpx rgba(94, 200, 255, 0.3);
   padding: 0;
+}
+.intro-pop-root {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 9999;
+}
+.intro-pop-mask {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+.intro-pop-panel {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-height: 70vh;
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+.intro-pop-scroll {
+  max-height: 65vh;
+}
+.intro-pop-img {
+  width: 100%;
 }

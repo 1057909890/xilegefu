@@ -241,18 +241,18 @@ exports.main = async (event, context) => {
           
           // 根据提醒频率生成提示信息
           let planName = '腹式呼吸训练'
-          let reminderText = '今日计划还未完成哦,请及时完成!'
+          let reminderText = '今日腹式呼吸计划还未完成哦,请及时完成!'
           
           if (type === 'daily') {
             if (frequency === 1) {
-              planName = '每日提醒'
-              reminderText = '今天的训练时间到了，开始练习吧！'
+              planName = '腹式呼吸训练'
+              reminderText = '今天的训练时间到了，开始腹式呼吸练习吧！'
             } else if (frequency === 2) {
-              planName = '每日提醒'
-              reminderText = matchedTime.hour < 12 ? '早上好，开始今天的第一次练习吧！' : '晚上好，完成今天的第二次练习吧！'
+              planName = '腹式呼吸训练'
+              reminderText = matchedTime.hour < 12 ? '早上好，开始今天的第一次腹式呼吸练习吧！' : '晚上好，完成今天的第二次腹式呼吸练习吧！'
             } else if (frequency === 3) {
-              planName = '每日提醒'
-              reminderText = '今日计划还未完成哦,请及时完成!'
+              planName = '腹式呼吸训练'
+              reminderText = '今日腹式呼吸计划还未完成哦,请及时完成!'
             }
           }
           
@@ -280,22 +280,10 @@ exports.main = async (event, context) => {
           console.error(`[定时提醒] ❌❌❌ 发送提醒失败，用户: ${userOpenid}`)
           console.error(`[定时提醒] 错误代码: ${errCode}, 错误信息: ${errMsg}`)
           
-          // 如果是用户拒绝订阅消息（43101），更新数据库状态
+          // 43101：可能是用户拒绝，也可能是授权次数已用完。不要改成 reject，否则以后永远不再尝试发送；
+          // 用户只要再次打开小程序并授权一次，就能继续收到。只打日志。
           if (errCode === 43101) {
-            try {
-              await db.collection('subscribe_settings')
-                .doc(setting._id)
-                .update({
-                  data: {
-                    [`subscribeResult.${templateId}`]: 'reject',
-                    updateTime: db.serverDate()
-                  }
-                })
-              console.log(`[定时提醒] ⚠️ 用户 ${userOpenid} 已拒绝订阅消息，已更新数据库状态为 reject`)
-              console.log(`[定时提醒] 提示：用户需要在小程序中重新授权订阅消息才能收到提醒`)
-            } catch (updateErr) {
-              console.error(`[定时提醒] 更新数据库状态失败:`, updateErr)
-            }
+            console.log(`[定时提醒] ⚠️ 43101 用户 ${userOpenid}：拒绝订阅或本次授权次数已用完，请在小程序内再次点击「保存设置」或打开提醒设置以累积授权次数`)
           }
           
           if (err.stack) {

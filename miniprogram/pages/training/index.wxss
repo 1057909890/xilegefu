@@ -1,4 +1,8 @@
 /* pages/training/index.wxss */
+.intro-wrap {
+  min-height: 100vh;
+}
+
 .training-page {
   min-height: 100vh;
   background: #1E1C33;
@@ -48,6 +52,16 @@
   position: absolute;
   top: 0;
   left: 0;
+}
+
+.progress-canvas-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 400rpx;
+  height: 400rpx;
+  border-radius: 50%;
+  background: rgba(38, 41, 71, 0.5);
 }
 
 .timer-content {
@@ -183,6 +197,110 @@
   opacity: 0.9;
   margin-top: 24rpx;
   transition: opacity 0.3s;
+}
+
+/* 右下角：语音 + 说明 */
+.fab-stack {
+  position: fixed;
+  right: 40rpx;
+  top:200rpx;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.fab-btn {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  background: rgba(38, 41, 71, 0.9);
+  border: 2rpx solid rgba(130, 208, 255, 0.35);
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fab-btn-hover {
+  opacity: 0.85;
+}
+
+.fab-btn-icon {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+/* 说明图弹层（打开时 canvas 已卸掉，用普通 view 即可全屏盖住并正常显示本地图） */
+.intro-pop-root {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  box-sizing: border-box;
+}
+
+.intro-pop-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+}
+
+.intro-pop-panel {
+  position: relative;
+  z-index: 1;
+  width: 640rpx;
+  max-width: 100%;
+  max-height: 85vh;
+  background-color: #262947;
+  border-radius: 24rpx;
+  border: 2rpx solid rgba(130, 208, 255, 0.25);
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.intro-pop-close {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  z-index: 2;
+  width: 66rpx;
+  height: 66rpx;
+  line-height: 66rpx;
+  text-align: center;
+  font-size: 48rpx;
+  color: #B9C6E2;
+  border-radius:33rpx;
+  background-color: rgba(30, 28, 51, 0.95);
+  border: 1rpx solid rgba(130, 208, 255, 0.3);
+}
+
+.intro-pop-scroll {
+  width: 100%;
+  height: 62vh;
+  max-height: 80vh;
+  padding: 112rpx 34rpx 32rpx;
+  box-sizing: border-box;
+}
+
+.intro-pop-img {
+  width: 100%;
+  display: block;
+  border-radius: 12rpx;
 }
 
 /* 操作按钮 */

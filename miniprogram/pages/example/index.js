@@ -110,7 +110,10 @@ Page({
     if (options.type === "uploadFile") {
       this.getUploadFileCode();
     }
-    this.setData({ type: options?.type, envId: options?.envId });
+    this.setData({
+      type: options ? options.type : undefined,
+      envId: options ? options.envId : undefined
+    });
   },
 
   copyUrl() {

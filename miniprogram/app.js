@@ -9,7 +9,7 @@ App({
         rhythm: {
           inhale: 3,  // 吸气3秒
           exhale: 6,  // 呼气6秒
-          hold: 2     // 保持2秒
+          hold: 3   // 保持2秒
         }
       }
     };
@@ -20,7 +20,7 @@ App({
         env: this.globalData.env,
         traceUser: true,
       });
-      
+
       // 用户登录：获取 openid
       this.login()
     }

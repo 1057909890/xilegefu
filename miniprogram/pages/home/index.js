@@ -19,56 +19,168 @@ Page({
     },
     showSafetyModal: false,
     safetyAgreed: false,
+    showPhoneLoginModal: false,
     showSubscribeModal: false,
     subscribeEnabled: true,
     reminderFrequency: 1, // 提醒频率：1、2、3次，默认为1
     reminderTimes: [], // 具体提醒时间，完全由用户选择，初始为空
-    showTimePicker: false, // 时间选择器显示状态
+    showTimePicker: false, // 练习时长选择器显示状态
     currentTimeIndex: 0, // 当前正在编辑的时间索引
+    timeSectionZIndex: 4, // 时间显示区域的 z-index，弹窗打开时会动态调整
     particles: [] // 粒子数组
   },
 
   onLoad(options) {
-    // 安全须知不在首页自动显示，只在点击开始按钮时检查
-    
-    // 检查是否需要显示订阅弹窗（从完成页跳转过来）
-    if (options && options.showSubscribe === 'true') {
-      setTimeout(() => {
+    try {
+      // 安全须知不在首页自动显示，只在点击开始按钮时检查
+      
+      // 检查是否需要显示订阅弹窗（从完成页跳转过来）
+      if (options && options.showSubscribe === 'true') {
+        setTimeout(() => {
+          this.setData({
+            showSubscribeModal: true
+          })
+        }, 500)
+      }
+
+      // 加载已保存的订阅设置
+      const subscribeSettings = wx.getStorageSync('subscribeSettings')
+      if (subscribeSettings && subscribeSettings.frequency && subscribeSettings.times) {
+        const frequency = subscribeSettings.frequency || 1
+        const times = subscribeSettings.times || []
+        // 确保时间数组长度等于频率
+        const normalizedTimes = [...times]
+        while (normalizedTimes.length < frequency) {
+          normalizedTimes.push('')
+        }
         this.setData({
-          showSubscribeModal: true
+          reminderFrequency: frequency,
+          reminderTimes: normalizedTimes
         })
-      }, 500)
-    }
+      } else {
+        // 如果没有保存的设置，初始化默认值：频率为1，时间数组为空字符串
+        this.setData({
+          reminderFrequency: 1,
+          reminderTimes: ['']
+        })
+      }
 
-    // 加载已保存的订阅设置
-    const subscribeSettings = wx.getStorageSync('subscribeSettings')
-    if (subscribeSettings && subscribeSettings.frequency && subscribeSettings.times) {
-      this.setData({
-        reminderFrequency: subscribeSettings.frequency || 1,
-        reminderTimes: subscribeSettings.times || []
-      })
-    }
+      // 初始化粒子
+      this.initParticles()
 
-    // 初始化粒子
-    this.initParticles()
+      this.ensureShareMenu()
 
-    // 从全局数据或本地存储加载设置
-    const settings = wx.getStorageSync('trainingSettings')
-    if (settings) {
-      this.setData({
-        duration: settings.duration || 10,
-        rhythm: settings.rhythm || { inhale: 3, exhale: 6, hold: 2 },
-        timeDisplay: this.formatTime(settings.duration || 10)
-      })
-    } else {
-      // 使用默认值
-      const defaultDuration = app.globalData.trainingSettings.duration || 10
-      this.setData({
-        duration: defaultDuration,
-        rhythm: app.globalData.trainingSettings.rhythm,
-        timeDisplay: this.formatTime(defaultDuration)
-      })
+      // 从全局数据或本地存储加载设置
+      const settings = wx.getStorageSync('trainingSettings')
+      if (settings) {
+        this.setData({
+          duration: settings.duration || 10,
+          rhythm: settings.rhythm || { inhale: 3, exhale: 6, hold: 2 },
+          timeDisplay: this.formatTime(settings.duration || 10)
+        })
+      } else {
+        // 使用默认值
+        const defaultDuration = app.globalData.trainingSettings.duration || 10
+        this.setData({
+          duration: defaultDuration,
+          rhythm: app.globalData.trainingSettings.rhythm,
+          timeDisplay: this.formatTime(defaultDuration)
+        })
+      }
+    } catch (err) {
+      console.error('home onLoad error', (err && (err.stack || err.message || err.errMsg)) || err)
     }
+  },
+
+  onReady() {
+    this.ensureShareMenu()
+  },
+
+  // 统一生成分享文案
+  getShareContent() {
+    const { duration, rhythm } = this.data
+    const rhythmText = `${rhythm.inhale}-${rhythm.exhale}-${rhythm.hold}`
+    return {
+      title: `一起练腹式呼吸，${duration}分钟放松一下`,
+      path: `/pages/home/index?from=share&duration=${duration}&rhythm=${rhythmText}`,
+      query: `from=share&duration=${duration}&rhythm=${rhythmText}`
+    }
+  },
+
+  // 分享给朋友
+  onShareAppMessage() {
+    const share = this.getShareContent()
+    return {
+      title: share.title,
+      path: share.path
+    }
+  },
+
+  // 分享到朋友圈
+  onShareTimeline() {
+    const share = this.getShareContent()
+    return {
+      title: share.title,
+      query: share.query
+    }
+  },
+
+  // 朋友圈分享需从右上角菜单发起，这里给用户提示
+  handleShareTimeline() {
+    wx.showToast({
+      title: '请点击右上角 ··· 分享到朋友圈',
+      icon: 'none',
+      duration: 2000
+    })
+  },
+
+  onShow() {
+    try {
+      this.ensureShareMenu()
+    } catch (err) {
+      console.error('home onShow error', (err && (err.stack || err.message || err.errMsg)) || err)
+    }
+  },
+
+  ensureShareMenu() {
+    if (!wx.showShareMenu) return
+    wx.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline'],
+      fail: (err) => {
+        console.warn('showShareMenu 失败', err)
+      }
+    })
+  },
+
+  // 静默续期：在已开启提醒的前提下调用 requestSubscribeMessage 以累积授权次数，便于每天都能发
+  trySilentSubscribeRenew() {
+    const templateId = 'YUP2qo8lHFjeWTaJiEuBLSI0W_5zsYzPTEHmZ6tjZAQ'
+    const settings = wx.getStorageSync('subscribeSettings')
+    if (!settings || !settings.enabled || !(settings.times && settings.times.length)) return
+    const last = wx.getStorageSync('lastSubscribeRenewAt') || 0
+    if (Date.now() - last < 20 * 60 * 60 * 1000) return // 每 20 小时最多一次
+    const userInfo = wx.getStorageSync('userInfo')
+    if (!userInfo || !userInfo.openid) return
+    if (!wx.cloud) return
+
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: async (res) => {
+        wx.setStorageSync('lastSubscribeRenewAt', Date.now())
+        if (res[templateId] !== 'accept') return
+        try {
+          const db = wx.cloud.database()
+          const r = await db.collection('subscribe_settings').where({ openid: userInfo.openid }).get()
+          if (r.data.length && r.data[0]._id) {
+            await db.collection('subscribe_settings').doc(r.data[0]._id).update({
+              data: { subscribeResult: res, updateTime: db.serverDate() }
+            })
+          }
+        } catch (e) { console.warn('静默续期写库失败', e) }
+      },
+      fail: () => { wx.setStorageSync('lastSubscribeRenewAt', Date.now()) }
+    })
   },
 
   // 初始化粒子
@@ -147,12 +259,13 @@ Page({
     })
   },
 
-  // 显示时间选择器
+  // 显示练习时长选择器
   showTimePicker() {
     this.setData({
       showTimePicker: true
     })
   },
+
 
   // 隐藏时间选择器
   hideTimePicker() {
@@ -204,14 +317,16 @@ Page({
   editRhythm() {
     this.setData({
       showRhythmEditor: true,
-      tempRhythm: { ...this.data.rhythm }
+      tempRhythm: { ...this.data.rhythm },
+      timeSectionZIndex: 1 // 弹窗打开时，降低时间显示区域的 z-index
     })
   },
 
   // 隐藏呼吸节奏编辑器
   hideRhythmEditor() {
     this.setData({
-      showRhythmEditor: false
+      showRhythmEditor: false,
+      timeSectionZIndex: 4 // 弹窗关闭时，恢复时间显示区域的 z-index
     })
   },
 
@@ -274,7 +389,7 @@ Page({
   },
 
   // 开始训练
-  startTraining() {
+  async startTraining() {
     // 检查是否已阅读安全须知（仅第一次）
     const hasReadSafety = wx.getStorageSync('hasReadSafety')
     if (!hasReadSafety) {
@@ -284,19 +399,12 @@ Page({
       })
       return
     }
-    
-    // 保存当前设置
-    const settings = {
-      duration: this.data.duration,
-      rhythm: this.data.rhythm
+
+    if (this.hasLoginCache()) {
+      await this.loginAndStartTraining()
+      return
     }
-    wx.setStorageSync('trainingSettings', settings)
-    app.globalData.trainingSettings = settings
-    
-    // 跳转到训练页面
-    wx.navigateTo({
-      url: `/pages/training/index?duration=${this.data.duration}&inhale=${this.data.rhythm.inhale}&exhale=${this.data.rhythm.exhale}&hold=${this.data.rhythm.hold}`
-    })
+    this.showPhoneLogin()
   },
 
   // 格式化时间显示（分钟转成时:分格式）
@@ -323,7 +431,7 @@ Page({
     // 不允许通过点击背景关闭，必须确认
   },
 
-  handleSafetyConfirm() {
+  async handleSafetyConfirm() {
     if (!this.data.safetyAgreed) {
       wx.showToast({
         title: '请先阅读并同意',
@@ -339,8 +447,15 @@ Page({
     this.setData({
       showSafetyModal: false
     })
-    
-    // 确认后继续开始训练
+
+    if (this.hasLoginCache()) {
+      await this.loginAndStartTraining()
+      return
+    }
+    this.showPhoneLogin()
+  },
+
+  async loginAndStartTraining() {
     const settings = {
       duration: this.data.duration,
       rhythm: this.data.rhythm
@@ -354,10 +469,62 @@ Page({
     })
   },
 
+  hasLoginCache() {
+    const userInfo = wx.getStorageSync('userInfo')
+    return !!(userInfo && userInfo.openid)
+  },
+
+  showPhoneLogin() {
+    this.setData({
+      showPhoneLoginModal: true
+    })
+  },
+
+  hidePhoneLogin() {
+    this.setData({
+      showPhoneLoginModal: false
+    })
+  },
+
+  async handlePhoneQuickLogin(e) {
+    if (!e.detail || !e.detail.code) {
+      wx.showToast({
+        title: '请先授权手机号',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.showLoading({
+      title: '登录中...',
+      mask: true
+    })
+
+    try {
+      await this.ensureLogin(false, e.detail.code)
+      wx.hideLoading()
+      this.hidePhoneLogin()
+      await this.loginAndStartTraining()
+    } catch (err) {
+      wx.hideLoading()
+      wx.showToast({
+        title: '登录失败，请重试',
+        icon: 'none'
+      })
+    }
+  },
+
   // 订阅相关方法
   showSubscribeModal() {
+    // 确保时间数组长度等于频率
+    const frequency = this.data.reminderFrequency || 1
+    const times = [...this.data.reminderTimes]
+    while (times.length < frequency) {
+      times.push('')
+    }
     this.setData({
-      showSubscribeModal: true
+      showSubscribeModal: true,
+      reminderTimes: times
     })
   },
 
@@ -367,12 +534,11 @@ Page({
     })
   },
 
-  // 确保用户已登录（使用微信快捷登录）
-  ensureLogin() {
+  ensureLogin(force = false, phoneCode = '') {
     return new Promise((resolve, reject) => {
       // 检查是否已有用户信息
       const userInfo = wx.getStorageSync('userInfo')
-      if (userInfo && userInfo.openid) {
+      if (!force && userInfo && userInfo.openid) {
         console.log('用户已登录', userInfo.openid)
         resolve(userInfo)
         return
@@ -384,28 +550,30 @@ Page({
         return
       }
 
-      // 调用云函数获取 openid（微信快捷登录）
+      const callData = phoneCode
+        ? { type: 'getPhoneNumber', code: phoneCode }
+        : { type: 'getOpenId' }
+
       wx.cloud.callFunction({
         name: 'quickstartFunctions',
-        data: {
-          type: 'getOpenId'
-        },
+        data: callData,
         success: (res) => {
-          console.log('获取openid成功', res)
+          console.log('登录成功', res)
           if (res.result && res.result.openid) {
             // 保存用户信息到本地存储
             const userInfo = {
               openid: res.result.openid,
               appid: res.result.appid,
-              unionid: res.result.unionid || ''
+              unionid: res.result.unionid || '',
+              phoneNumber: res.result.phoneInfo ? res.result.phoneInfo.phoneNumber : ''
             }
             wx.setStorageSync('userInfo', userInfo)
-            
+
             // 更新全局数据
             if (app.globalData) {
               app.globalData.userInfo = userInfo
             }
-            
+
             console.log('登录成功，openid:', userInfo.openid)
             resolve(userInfo)
           } else {
@@ -442,38 +610,97 @@ Page({
       }
     }
     
+    // 确保数组长度至少等于频率（处理初始为空数组的情况）
+    while (currentTimes.length < frequency) {
+      currentTimes.push('')
+    }
+    
     this.setData({
       reminderFrequency: frequency,
       reminderTimes: currentTimes
     })
   },
 
-  // 打开时间选择器
-  openTimePicker(e) {
-    const index = parseInt(e.currentTarget.dataset.index)
-    this.setData({
-      currentTimeIndex: index,
-      showTimePicker: true
-    })
-  },
 
   // 时间选择器变化
   onTimePickerChange(e) {
     const time = e.detail.value
-    const times = [...this.data.reminderTimes]
-    times[this.data.currentTimeIndex] = time
-    this.setData({
-      reminderTimes: times,
-      showTimePicker: false
+    // 从 picker 的 data-index 获取索引
+    let index = 0
+    
+    // 尝试多种方式获取索引
+    if (e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.index !== undefined) {
+      index = parseInt(e.currentTarget.dataset.index)
+    } else if (e.target && e.target.dataset && e.target.dataset.index !== undefined) {
+      index = parseInt(e.target.dataset.index)
+    } else {
+      // 如果获取不到索引，尝试通过比较时间值来确定（不推荐，但作为备选）
+      console.warn('无法获取索引，尝试通过时间值匹配')
+      const currentTimes = this.data.reminderTimes
+      for (let i = 0; i < currentTimes.length; i++) {
+        if (currentTimes[i] && currentTimes[i] !== time) {
+          // 找到第一个不同的时间，可能是这个索引
+          index = i
+          break
+        }
+      }
+    }
+    
+    console.log('时间选择器变化:', { 
+      time, 
+      index,
+      currentTargetDataset: e.currentTarget ? e.currentTarget.dataset : undefined,
+      targetDataset: e.target ? e.target.dataset : undefined,
+      detail: e.detail,
+      currentReminderTimes: this.data.reminderTimes
     })
+    
+    const times = [...this.data.reminderTimes]
+    
+    // 确保数组长度足够
+    while (times.length <= index) {
+      times.push('')
+    }
+    
+    // 设置时间值
+    times[index] = time
+    
+    console.log('更新前的时间数组:', this.data.reminderTimes)
+    console.log('更新后的时间数组:', times)
+    
+    // 直接更新整个数组，确保数据同步
+    this.setData({
+      reminderTimes: times
+    }, () => {
+      console.log('setData 完成后的时间数组:', this.data.reminderTimes)
+      // 验证更新是否成功
+      if (this.data.reminderTimes[index] !== time) {
+        console.error('时间更新失败！期望:', time, '实际:', this.data.reminderTimes[index])
+      } else {
+        console.log('时间更新成功！')
+      }
+    })
+    
+    // 保存提醒时间设置
+    const subscribeSettings = wx.getStorageSync('subscribeSettings') || {}
+    subscribeSettings.times = times
+    subscribeSettings.reminderTimes = times.map(t => {
+      if (!t) return { hour: 10, minute: 0 }
+      const [hour, minute] = t.split(':').map(Number)
+      return { hour, minute }
+    })
+    wx.setStorageSync('subscribeSettings', subscribeSettings)
+    
+    console.log('已保存订阅设置:', subscribeSettings)
   },
 
-  // 关闭时间选择器
+  // 关闭练习时长选择器
   hideTimePicker() {
     this.setData({
       showTimePicker: false
     })
   },
+
 
   async confirmSubscribe() {
     // 检查用户是否已登录
@@ -592,7 +819,7 @@ Page({
         // 保存订阅设置到云数据库
         try {
           const userInfo = wx.getStorageSync('userInfo')
-          const openid = userInfo?.openid
+          const openid = userInfo && userInfo.openid
           
           if (!openid) {
             console.error('未获取到 openid')
@@ -615,8 +842,8 @@ Page({
             })
             .get()
           
-          // 合并查询结果，去重
-          const allExisting = [...existingByOpenid.data, ...existingByOpenid.data]
+          // 合并查询结果，去重（原 bug：第二个应是 existingByOpenid2）
+          const allExisting = [...existingByOpenid.data, ...((existingByOpenid2 && existingByOpenid2.data) || [])]
           const uniqueExisting = allExisting.filter((item, index, self) => 
             index === self.findIndex(t => t._id === item._id)
           )

@@ -5,19 +5,30 @@ Page({
     totalCount: 0,
     totalDuration: '00:00',
     checkInDays: 0,
-    headerPaddingTop: 0
+    headerPaddingTop: 0,
+    navBarHeight: 44
   },
 
   onLoad() {
-    // 获取系统信息，计算 header padding-top
+    // 获取系统信息，按 px 计算自定义导航高度（适配刘海屏/灵动岛）
     const systemInfo = wx.getSystemInfoSync()
-    const statusBarHeight = systemInfo.statusBarHeight || 0
-    // 状态栏高度 + 20rpx 额外间距，转换为 rpx
-    const paddingTop = (statusBarHeight * 2) + 20
+    const statusBarHeight = systemInfo.statusBarHeight || 20
+    let navBarHeight = 44
+
+    try {
+      const menuButton = wx.getMenuButtonBoundingClientRect()
+      if (menuButton && menuButton.top) {
+        navBarHeight = (menuButton.top - statusBarHeight) * 2 + menuButton.height
+      }
+    } catch (err) {
+      console.warn('获取胶囊位置信息失败，使用默认导航高度', err)
+    }
+
     this.setData({
-      headerPaddingTop: paddingTop
+      headerPaddingTop: statusBarHeight,
+      navBarHeight: navBarHeight
     })
-    
+
     this.loadHistory()
     this.loadStatistics()
   },

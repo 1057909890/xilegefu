@@ -15,6 +15,29 @@ const getOpenId = async () => {
   };
 };
 
+const getPhoneNumber = async (event) => {
+  const wxContext = cloud.getWXContext();
+  if (!event.code) {
+    return {
+      openid: wxContext.OPENID,
+      appid: wxContext.APPID,
+      unionid: wxContext.UNIONID,
+      phoneInfo: null,
+    };
+  }
+
+  const phoneRes = await cloud.openapi.phonenumber.getPhoneNumber({
+    code: event.code,
+  });
+
+  return {
+    openid: wxContext.OPENID,
+    appid: wxContext.APPID,
+    unionid: wxContext.UNIONID,
+    phoneInfo: phoneRes.phone_info || null,
+  };
+};
+
 // 获取小程序二维码
 const getMiniProgramCode = async () => {
   // 获取小程序二维码的buffer
@@ -169,6 +192,8 @@ exports.main = async (event, context) => {
   switch (event.type) {
     case "getOpenId":
       return await getOpenId();
+    case "getPhoneNumber":
+      return await getPhoneNumber(event);
     case "getMiniProgramCode":
       return await getMiniProgramCode();
     case "createCollection":
