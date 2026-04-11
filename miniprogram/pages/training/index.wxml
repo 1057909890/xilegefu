@@ -1,13 +1,26 @@
 <!--pages/training/index.wxml-->
 <view class="intro-wrap">
   <view class="training-page">
+
+    <view wx:if="{{preStartActive}}" class="prestart-mask">
+      <view class="prestart-lamp">
+        <view class="prestart-lamp-outer">
+          <view class="prestart-lamp-inner"></view>
+        </view>
+      </view>
+
+      <text class="prestart-number" wx:if="{{preStartCount !== 0}}">{{preStartCount}}</text>
+      <text class="prestart-number" wx:else>开始</text>
+
+      <text class="prestart-tip">{{preStartTip}}</text>
+    </view>
     
     <!-- 计时器模块 -->
     <view class="timer-section">
       <view class="progress-ring">
         <!-- 说明弹窗打开时卸掉 canvas，避免原生层压盖；关闭后再 initCanvas 重绘 -->
         <canvas
-          wx:if="{{!showIntroTip}}"
+          wx:if="{{!showIntroTip && !preStartActive}}"
           class="progress-canvas"
           type="2d"
           id="progressCanvas"

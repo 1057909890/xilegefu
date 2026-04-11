@@ -7,9 +7,11 @@ App({
       trainingSettings: {
         duration: 10, // 默认10分钟
         rhythm: {
-          inhale: 3,  // 吸气3秒
-          exhale: 6,  // 呼气6秒
-          hold: 3   // 保持2秒
+          inhale: 6,  // 吸气6秒
+          exhale: 4,  // 呼气4秒
+          hold1: 4,   // 保持4秒（吸气后）
+          hold2: 0,   // 保持0秒（呼气后）
+          hold: 4     // 兼容旧逻辑
         }
       }
     };

@@ -9,9 +9,10 @@ Page({
     timeDisplay: '10:00', // 剩余时间显示
     
     // 呼吸节奏
-    inhale: 3, // 吸气秒数
-    exhale: 6, // 呼气秒数
-    hold: 2,   // 保持秒数
+    inhale: 6, // 吸气秒数
+    exhale: 4, // 呼气秒数
+    hold1: 4,   // 保持秒数（吸气后）
+    hold2: 0,   // 保持秒数（呼气后）
     
     // 呼吸状态
     breathingState: 'inhale', // inhale, exhale, hold
@@ -30,11 +31,17 @@ Page({
     countdownTimer: null,
     inhaleTimer: null,
     holdTimer: null,
+    holdTimer2: null,
     exhaleTimer: null,
     progressCanvas: null,
     completionHandled: false,
     voiceOn: true,
-    showIntroTip: false
+    showIntroTip: false,
+    preStartActive: false,
+    preStartCount: 0,
+    preStartTimer: null,
+    preStartTimeout: null,
+    preStartTip: '调整呼吸，放松身心。'
   },
 
   onLoad(options) {
@@ -57,17 +64,23 @@ Page({
     
     // 获取参数
     const duration = parseInt(options.duration) || 10
-    let inhale = parseInt(options.inhale) || 3
-    let exhale = parseInt(options.exhale) || 6
-    let hold = parseInt(options.hold) || 2
+    const hasOpt = (v) => v !== undefined && v !== null && v !== ''
+    let inhale = hasOpt(options.inhale) ? parseInt(options.inhale) : 6
+    let exhale = hasOpt(options.exhale) ? parseInt(options.exhale) : 4
+    const legacyHold = hasOpt(options.hold) ? parseInt(options.hold) : undefined
+    let hold1 = hasOpt(options.hold1) ? parseInt(options.hold1) : (legacyHold !== undefined ? legacyHold : 4)
+    let hold2 = hasOpt(options.hold2) ? parseInt(options.hold2) : (legacyHold !== undefined ? legacyHold : 0)
     
     // 如果参数中没有，尝试从全局数据或本地存储获取
-    if (!options.inhale) {
+    if (!hasOpt(options.inhale)) {
       const settings = wx.getStorageSync('trainingSettings')
       if (settings && settings.rhythm) {
-        inhale = settings.rhythm.inhale || 3
-        exhale = settings.rhythm.exhale || 6
-        hold = settings.rhythm.hold || 2
+        inhale = hasOpt(settings.rhythm.inhale) ? settings.rhythm.inhale : 6
+        exhale = hasOpt(settings.rhythm.exhale) ? settings.rhythm.exhale : 4
+        const sr = settings.rhythm
+        const shLegacy = hasOpt(sr.hold) ? sr.hold : undefined
+        hold1 = hasOpt(sr.hold1) ? sr.hold1 : (shLegacy !== undefined ? shLegacy : 4)
+        hold2 = hasOpt(sr.hold2) ? sr.hold2 : (shLegacy !== undefined ? shLegacy : 0)
       }
     }
     
@@ -78,19 +91,19 @@ Page({
       remainingTime: totalSeconds,
       inhale: inhale,
       exhale: exhale,
-      hold: hold,
+      hold1: hold1,
+      hold2: hold2,
       totalTime: this.formatTime(totalSeconds),
       timeDisplay: this.formatTime(totalSeconds),
       breathingCount: inhale
     })
     
-    console.log('训练参数:', { duration, inhale, exhale, hold })
+    console.log('训练参数:', { duration, inhale, exhale, hold1, hold2 })
     
     // 初始化画布
     this.initCanvas()
-    
-    // 开始训练
-    this.startTraining()
+
+    this.startPreStart()
   },
 
   onUnload() {
@@ -110,8 +123,51 @@ Page({
     this.stopAndDestroyVoicePlayer()
   },
 
+  startPreStart() {
+    // 防止重复启动
+    if (this.data.preStartActive) return
+
+    // 预倒计时期间不开始训练
+    this.setData({
+      preStartActive: true,
+      preStartCount: 3,
+      preStartTip: '调整呼吸，放松身心。',
+      isRunning: false,
+      isPaused: false
+    })
+
+    const stepMs = 2000
+    const t = setInterval(() => {
+      const next = this.data.preStartCount - 1
+      if (next < 0) return
+      if (next === 0) {
+        clearInterval(t)
+        this.setData({ preStartCount: 0, preStartTimer: null, preStartTip: '调整呼吸，放松身心。' })
+        const timeout = setTimeout(() => {
+          this.setData({ preStartActive: false, preStartTimeout: null })
+          this.startTraining()
+        }, stepMs)
+        this.setData({ preStartTimeout: timeout })
+        return
+      }
+      const tipMap = {
+        2: '吸气，腹部轻轻鼓起。',
+        1: '呼气，腹部缓缓收回。'
+      }
+      this.setData({ preStartCount: next, preStartTip: tipMap[next] || '调整呼吸，放松身心。' })
+    }, stepMs)
+
+    this.setData({ preStartTimer: t })
+  },
+
   // 初始化语音播放器
   initVoicePlayer() {
+    if (wx.setInnerAudioOption) {
+      wx.setInnerAudioOption({
+        obeyMuteSwitch: false,
+        mixWithOther: true
+      })
+    }
     this.voicePlayer = wx.createInnerAudioContext()
     this.voicePlayer.autoplay = false
   },
@@ -283,17 +339,14 @@ Page({
       if (this.data.isPaused) return
       
       let remaining = this.data.remainingTime - 1
-      
-      if (remaining <= 0) {
-        // 训练完成
-        this.completeTraining()
-        return
-      }
-      
+      if (remaining < 0) remaining = 0
+
       const elapsed = this.data.totalDuration - remaining
       
-      // 一个完整循环：吸气 + 保持 + 呼气 + 保持
-      const cycleDuration = this.data.inhale + this.data.hold + this.data.exhale + this.data.hold
+      // 一个完整循环：吸气 + (保持) + 呼气 + (保持)
+      const hold1 = this.data.hold1 > 0 ? this.data.hold1 : 0
+      const hold2 = this.data.hold2 > 0 ? this.data.hold2 : 0
+      const cycleDuration = this.data.inhale + this.data.exhale + hold1 + hold2
       
       this.setData({
         remainingTime: remaining,
@@ -305,6 +358,12 @@ Page({
       // 更新进度环
       const progress = remaining / this.data.totalDuration
       this.drawProgress(progress)
+
+      if (remaining <= 0) {
+        // 训练完成（确保 UI 先显示到 00:00）
+        const run = wx.nextTick || ((fn) => setTimeout(fn, 0))
+        run(() => this.completeTraining())
+      }
     }, 1000)
   },
 
@@ -317,37 +376,54 @@ Page({
   breathingCycle() {
     if (!this.data.isRunning || this.data.isPaused) return
     
+    if (this.data.hold1 <= 0 && this.data.hold2 <= 0) {
+      // 无保持：吸气-呼气 循环
+      this.startInhale()
+      const inhaleTimer = setTimeout(() => {
+        if (!this.data.isRunning || this.data.isPaused) return
+        this.startExhale()
+        const exhaleTimer = setTimeout(() => {
+          if (this.data.isRunning && !this.data.isPaused) {
+            this.breathingCycle()
+          }
+        }, this.data.exhale * 1000)
+        this.data.exhaleTimer = exhaleTimer
+      }, this.data.inhale * 1000)
+      this.data.inhaleTimer = inhaleTimer
+      return
+    }
+
     // 吸气阶段
     this.startInhale()
     
     const inhaleTimer = setTimeout(() => {
       if (!this.data.isRunning || this.data.isPaused) return
       // 保持阶段（吸气后）
-      this.startHold()
+      this.startHold(this.data.hold1)
       
       const holdTimer1 = setTimeout(() => {
         if (!this.data.isRunning || this.data.isPaused) return
         // 呼气阶段
         this.startExhale()
-        
+
         const exhaleTimer = setTimeout(() => {
           if (!this.data.isRunning || this.data.isPaused) return
           // 保持阶段（呼气后）
-          this.startHold()
-          
+          this.startHold(this.data.hold2)
+
           const holdTimer2 = setTimeout(() => {
             if (this.data.isRunning && !this.data.isPaused) {
               // 继续下一个循环
               this.breathingCycle()
             }
-          }, this.data.hold * 1000)
-          
-          this.data.holdTimer = holdTimer2
+          }, this.data.hold2 * 1000)
+
+          this.data.holdTimer2 = holdTimer2
         }, this.data.exhale * 1000)
-        
+
         // 保存定时器以便清理
         this.data.exhaleTimer = exhaleTimer
-      }, this.data.hold * 1000)
+      }, this.data.hold1 * 1000)
       
       this.data.holdTimer = holdTimer1
     }, this.data.inhale * 1000)
@@ -380,12 +456,14 @@ Page({
   },
 
   // 保持阶段（无动画，保持当前scale）
-  startHold() {
+  startHold(durationSeconds) {
+    const duration = typeof durationSeconds === 'number' ? durationSeconds : this.data.hold1
+    if (!duration || duration <= 0) return
     // 保持当前scale不变，不添加动画
     this.setData({
       breathingState: 'hold',
       breathingText: '保持',
-      breathingCount: this.data.hold,
+      breathingCount: duration,
       // breathingHint: '保持...',
       breathingDuration: 0 // 无动画
       // breathScale 保持不变，不更新
@@ -393,7 +471,7 @@ Page({
     this.playVoiceByStage('hold')
     
     // 倒计时更新
-    this.startCountdown(this.data.hold)
+    this.startCountdown(duration)
   },
 
   // 呼气阶段
@@ -453,6 +531,7 @@ Page({
 
   // 切换暂停/继续
   togglePause() {
+    if (this.data.preStartActive) return
     if (this.data.isPaused) {
       // 继续
       this.setData({
@@ -472,6 +551,14 @@ Page({
 
   // 停止训练
   handleStop() {
+    if (this.data.preStartTimer) {
+      clearInterval(this.data.preStartTimer)
+      this.setData({ preStartTimer: null })
+    }
+    if (this.data.preStartTimeout) {
+      clearTimeout(this.data.preStartTimeout)
+      this.setData({ preStartTimeout: null })
+    }
     wx.showModal({
       title: '确认停止',
       content: '确定要停止本次训练吗？',
@@ -544,7 +631,9 @@ Page({
         rhythm: {
           inhale: this.data.inhale,
           exhale: this.data.exhale,
-          hold: this.data.hold
+          hold1: this.data.hold1,
+          hold2: this.data.hold2,
+          hold: this.data.hold1
         },
         date: new Date(),
         createTime: db.serverDate()
@@ -591,8 +680,14 @@ Page({
     if (this.data.holdTimer) {
       clearTimeout(this.data.holdTimer)
     }
+    if (this.data.holdTimer2) {
+      clearTimeout(this.data.holdTimer2)
+    }
     if (this.data.exhaleTimer) {
       clearTimeout(this.data.exhaleTimer)
+    }
+    if (this.data.preStartTimer) {
+      clearInterval(this.data.preStartTimer)
     }
     this.setData({
       isRunning: false,
@@ -600,7 +695,10 @@ Page({
       countdownTimer: null,
       inhaleTimer: null,
       holdTimer: null,
+      holdTimer2: null,
       exhaleTimer: null
+      ,
+      preStartTimer: null
     })
   },
 

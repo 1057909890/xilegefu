@@ -54,7 +54,14 @@ Page({
 
     try {
       const db = wx.cloud.database()
+      const userInfo = wx.getStorageSync('userInfo') || {}
+      const openid = userInfo.openid
+      if (!openid) {
+        this.setData({ historyList: [] })
+        return
+      }
       const records = await db.collection('training_records')
+        .where({ _openid: openid })
         .orderBy('date', 'desc')
         .limit(50)
         .get()
@@ -104,13 +111,25 @@ Page({
     try {
       const db = wx.cloud.database()
       const _ = db.command
+      const userInfo = wx.getStorageSync('userInfo') || {}
+      const openid = userInfo.openid
+      if (!openid) {
+        this.setData({
+          totalCount: 0,
+          totalDuration: '00:00',
+          checkInDays: 0
+        })
+        return
+      }
 
       // 获取总训练次数
       const totalCountResult = await db.collection('training_records')
+        .where({ _openid: openid })
         .count()
 
       // 获取总时长
       const allRecords = await db.collection('training_records')
+        .where({ _openid: openid })
         .get()
 
       let totalSeconds = 0
@@ -142,7 +161,11 @@ Page({
   async getCheckInDays() {
     try {
       const db = wx.cloud.database()
+      const userInfo = wx.getStorageSync('userInfo') || {}
+      const openid = userInfo.openid
+      if (!openid) return 0
       const records = await db.collection('training_records')
+        .where({ _openid: openid })
         .orderBy('date', 'desc')
         .limit(30)
         .get()

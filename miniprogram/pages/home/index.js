@@ -6,16 +6,18 @@ Page({
     duration: 10,
     timeDisplay: '10:00',
     rhythm: {
-      inhale: 3,
-      exhale: 6,
-      hold: 2
+      inhale: 6,
+      exhale: 4,
+      hold1: 4,
+      hold2: 0
     },
     showTimePicker: false,
     showRhythmEditor: false,
     tempRhythm: {
-      inhale: 3,
-      exhale: 6,
-      hold: 2
+      inhale: 6,
+      exhale: 4,
+      hold1: 4,
+      hold2: 0
     },
     showSafetyModal: false,
     safetyAgreed: false,
@@ -27,44 +29,15 @@ Page({
     showTimePicker: false, // 练习时长选择器显示状态
     currentTimeIndex: 0, // 当前正在编辑的时间索引
     timeSectionZIndex: 4, // 时间显示区域的 z-index，弹窗打开时会动态调整
-    particles: [] // 粒子数组
+    particles: [], // 粒子数组
+    showBreathInfoModal: false,
+    breathInfoNodes: []
   },
 
   onLoad(options) {
     try {
       // 安全须知不在首页自动显示，只在点击开始按钮时检查
       
-      // 检查是否需要显示订阅弹窗（从完成页跳转过来）
-      if (options && options.showSubscribe === 'true') {
-        setTimeout(() => {
-          this.setData({
-            showSubscribeModal: true
-          })
-        }, 500)
-      }
-
-      // 加载已保存的订阅设置
-      const subscribeSettings = wx.getStorageSync('subscribeSettings')
-      if (subscribeSettings && subscribeSettings.frequency && subscribeSettings.times) {
-        const frequency = subscribeSettings.frequency || 1
-        const times = subscribeSettings.times || []
-        // 确保时间数组长度等于频率
-        const normalizedTimes = [...times]
-        while (normalizedTimes.length < frequency) {
-          normalizedTimes.push('')
-        }
-        this.setData({
-          reminderFrequency: frequency,
-          reminderTimes: normalizedTimes
-        })
-      } else {
-        // 如果没有保存的设置，初始化默认值：频率为1，时间数组为空字符串
-        this.setData({
-          reminderFrequency: 1,
-          reminderTimes: ['']
-        })
-      }
-
       // 初始化粒子
       this.initParticles()
 
@@ -73,23 +46,165 @@ Page({
       // 从全局数据或本地存储加载设置
       const settings = wx.getStorageSync('trainingSettings')
       if (settings) {
+        const sr = settings.rhythm || {}
+        const hold1 = sr.hold1 !== undefined ? sr.hold1 : (sr.hold !== undefined ? sr.hold : 4)
+        const hold2 = sr.hold2 !== undefined ? sr.hold2 : (sr.hold !== undefined ? sr.hold : 0)
         this.setData({
           duration: settings.duration || 10,
-          rhythm: settings.rhythm || { inhale: 3, exhale: 6, hold: 2 },
+          rhythm: {
+            inhale: sr.inhale !== undefined ? sr.inhale : 6,
+            exhale: sr.exhale !== undefined ? sr.exhale : 4,
+            hold1,
+            hold2
+          },
           timeDisplay: this.formatTime(settings.duration || 10)
         })
       } else {
         // 使用默认值
         const defaultDuration = app.globalData.trainingSettings.duration || 10
+        const gr = (app.globalData.trainingSettings && app.globalData.trainingSettings.rhythm) || {}
+        const hold1 = gr.hold1 !== undefined ? gr.hold1 : (gr.hold !== undefined ? gr.hold : 4)
+        const hold2 = gr.hold2 !== undefined ? gr.hold2 : (gr.hold !== undefined ? gr.hold : 0)
         this.setData({
           duration: defaultDuration,
-          rhythm: app.globalData.trainingSettings.rhythm,
+          rhythm: {
+            inhale: gr.inhale !== undefined ? gr.inhale : 6,
+            exhale: gr.exhale !== undefined ? gr.exhale : 4,
+            hold1,
+            hold2
+          },
           timeDisplay: this.formatTime(defaultDuration)
         })
       }
+
+      const sectionLabelWrap = 'display:flex;align-items:center;gap:14rpx;margin:18rpx 0 16rpx;'
+      const sectionBarBlue = 'width:6rpx;height:34rpx;border-radius:6rpx;background:rgba(94,200,255,0.95);'
+      const sectionBarYellow = 'width:6rpx;height:34rpx;border-radius:6rpx;background:rgba(255,204,0,0.90);'
+      const sectionBarGreen = 'width:6rpx;height:34rpx;border-radius:6rpx;background:rgba(92,255,185,0.85);'
+      const sectionLabelText = 'font-size:30rpx;font-weight:800;color:rgba(255,255,255,0.92);line-height:1.1;letter-spacing:1rpx;'
+
+      const paragraphStyle = 'font-size:30rpx;color:rgba(255,255,255,0.82);line-height:2.15;'
+      const paragraphMutedStyle = 'font-size:28rpx;color:rgba(255,255,255,0.72);line-height:2.1;'
+
+      const glassCard = 'background:rgba(255,255,255,0.05);border:1rpx solid rgba(255,255,255,0.10);border-radius:28rpx;padding:26rpx 24rpx;margin-bottom:18rpx;'
+      const rowCard = glassCard + 'display:flex;gap:20rpx;align-items:flex-start;'
+      const iconBox = 'width:88rpx;height:88rpx;border-radius:24rpx;background:rgba(255,255,255,0.06);border:1rpx solid rgba(255,255,255,0.10);display:flex;align-items:center;justify-content:center;flex-shrink:0;'
+      const iconText = 'font-size:42rpx;line-height:1;'
+      const cardTitle = 'font-size:32rpx;font-weight:850;color:#FFFFFF;line-height:1.35;margin-bottom:12rpx;'
+      const cardBody = paragraphStyle + 'white-space:pre-wrap;'
+      const metaLine = 'font-size:24rpx;color:rgba(255,255,255,0.55);line-height:1.2;margin-bottom:10rpx;'
+
+      const breathInfoNodes = [
+        { name: 'div', attrs: { style: 'padding:0 2rpx;' }, children: [
+          { name: 'div', attrs: { style: 'font-size:40rpx;font-weight:900;color:#FFFFFF;line-height:1.25;margin:2rpx 0 18rpx;' }, children: [{ type: 'text', text: '腹式呼吸' }] },
+
+          { name: 'div', attrs: { style: sectionLabelWrap }, children: [
+            { name: 'div', attrs: { style: sectionBarBlue }, children: [] },
+            { name: 'div', attrs: { style: sectionLabelText }, children: [{ type: 'text', text: '原理' }] }
+          ] },
+
+          { name: 'div', attrs: { style: glassCard }, children: [
+            { name: 'div', attrs: { style: paragraphStyle }, children: [{ type: 'text', text: '腹式呼吸（Diaphragmatic Breathing）并不是“玄学”，它来源于多个被验证的科学领域：' }] }
+          ] },
+
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '🫁' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '呼吸生理学' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '研究表明，横膈膜主导的深呼吸能提高肺泡通气效率，改善氧气交换。' }] }
+            ] }
+          ] },
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '🧘' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '副交感神经系统调节机制' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '缓慢深呼吸可以激活“放松系统”，降低心率与压力水平。' }] }
+            ] }
+          ] },
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '📈' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '心率变异性（HRV）研究' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '节律性呼吸（约 4–6 次/分钟）能显著提升 HRV，代表身体恢复能力增强。' }] }
+            ] }
+          ] },
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '🏛️' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '哈佛医学院 / 美国国立卫生研究院相关研究' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '均指出深呼吸训练可用于缓解焦虑、改善睡眠和降低慢性压力。' }] }
+            ] }
+          ] },
+
+          { name: 'div', attrs: { style: 'background:rgba(94,200,255,0.08);border:1rpx solid rgba(94,200,255,0.20);border-radius:28rpx;padding:26rpx 24rpx;margin:6rpx 0 26rpx;' }, children: [
+            { name: 'div', attrs: { style: metaLine }, children: [{ type: 'text', text: '简单总结一句话' }] },
+            { name: 'div', attrs: { style: paragraphStyle }, children: [{ type: 'text', text: '慢 + 深 + 有节奏的呼吸 = 身体从“紧张模式”切换到“恢复模式”' }] }
+          ] },
+
+          { name: 'div', attrs: { style: sectionLabelWrap }, children: [
+            { name: 'div', attrs: { style: sectionBarGreen }, children: [] },
+            { name: 'div', attrs: { style: sectionLabelText }, children: [{ type: 'text', text: '练习步骤' }] }
+          ] },
+
+          { name: 'div', attrs: { style: glassCard }, children: [
+            { name: 'div', attrs: { style: paragraphMutedStyle + 'white-space:pre-wrap;' }, children: [{ type: 'text', text: '标准节奏版 4-4-6\n吸气 4 秒 / 停顿 4 秒 / 呼气 6 秒' }] }
+          ] },
+
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '🖐️' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: metaLine }, children: [{ type: 'text', text: '准备开始' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '把一只手放在胸口，一只手放在腹部\n让注意力慢慢回到呼吸上' }] }
+            ] }
+          ] },
+
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '🌬️' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: metaLine }, children: [{ type: 'text', text: '步骤 1' }] },
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '吸气（4秒）' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '慢慢吸气……\n让空气进入腹部\n感受小腹轻轻鼓起' }] }
+            ] }
+          ] },
+
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '⏸️' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: metaLine }, children: [{ type: 'text', text: '步骤 2' }] },
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '停顿（4秒）' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '保持呼吸\n不要用力\n让身体自然停留' }] }
+            ] }
+          ] },
+
+          { name: 'div', attrs: { style: rowCard }, children: [
+            { name: 'div', attrs: { style: iconBox }, children: [{ name: 'span', attrs: { style: iconText }, children: [{ type: 'text', text: '💨' }] }] },
+            { name: 'div', attrs: { style: 'flex:1;min-width:0;' }, children: [
+              { name: 'div', attrs: { style: metaLine }, children: [{ type: 'text', text: '步骤 3' }] },
+              { name: 'div', attrs: { style: cardTitle }, children: [{ type: 'text', text: '呼气（6秒）' }] },
+              { name: 'div', attrs: { style: cardBody }, children: [{ type: 'text', text: '缓缓呼气……\n让腹部慢慢回落\n释放身体的紧张' }] }
+            ] }
+          ] },
+
+          { name: 'div', attrs: { style: glassCard }, children: [
+            { name: 'div', attrs: { style: metaLine }, children: [{ type: 'text', text: '循环提示' }] },
+            { name: 'div', attrs: { style: paragraphStyle + 'white-space:pre-wrap;' }, children: [{ type: 'text', text: '继续\n吸气……停……呼气……' }] }
+          ] },
+
+          { name: 'div', attrs: { style: paragraphStyle + 'white-space:pre-wrap;margin:8rpx 0 6rpx;padding:0 4rpx;' }, children: [{ type: 'text', text: '每一次呼吸\n都让身体更放松一点' }] }
+        ] }
+      ]
+      this.setData({ breathInfoNodes })
     } catch (err) {
       console.error('home onLoad error', (err && (err.stack || err.message || err.errMsg)) || err)
     }
+  },
+
+  showBreathInfo() {
+    this.setData({ showBreathInfoModal: true, timeSectionZIndex: 1 })
+  },
+
+  hideBreathInfo() {
+    this.setData({ showBreathInfoModal: false, timeSectionZIndex: 4 })
   },
 
   onReady() {
@@ -364,9 +479,17 @@ Page({
   },
 
   // 保持滑块变化
-  onHoldChange(e) {
+  onHold1Change(e) {
     const tempRhythm = { ...this.data.tempRhythm }
-    tempRhythm.hold = e.detail.value
+    tempRhythm.hold1 = e.detail.value
+    this.setData({
+      tempRhythm: tempRhythm
+    })
+  },
+
+  onHold2Change(e) {
+    const tempRhythm = { ...this.data.tempRhythm }
+    tempRhythm.hold2 = e.detail.value
     this.setData({
       tempRhythm: tempRhythm
     })
@@ -400,11 +523,18 @@ Page({
       return
     }
 
-    if (this.hasLoginCache()) {
-      await this.loginAndStartTraining()
+    await this.promptSubscribeOnStart()
+
+    try {
+      await this.ensureLogin()
+    } catch (err) {
+      wx.showToast({
+        title: '初始化用户失败，请重试',
+        icon: 'none'
+      })
       return
     }
-    this.showPhoneLogin()
+    await this.loginAndStartTraining()
   },
 
   // 格式化时间显示（分钟转成时:分格式）
@@ -448,11 +578,18 @@ Page({
       showSafetyModal: false
     })
 
-    if (this.hasLoginCache()) {
-      await this.loginAndStartTraining()
+    await this.promptSubscribeOnStart()
+
+    try {
+      await this.ensureLogin()
+    } catch (err) {
+      wx.showToast({
+        title: '初始化用户失败，请重试',
+        icon: 'none'
+      })
       return
     }
-    this.showPhoneLogin()
+    await this.loginAndStartTraining()
   },
 
   async loginAndStartTraining() {
@@ -465,13 +602,44 @@ Page({
     
     // 跳转到训练页面
     wx.navigateTo({
-      url: `/pages/training/index?duration=${this.data.duration}&inhale=${this.data.rhythm.inhale}&exhale=${this.data.rhythm.exhale}&hold=${this.data.rhythm.hold}`
+      url: `/pages/training/index?duration=${this.data.duration}&inhale=${this.data.rhythm.inhale}&hold1=${this.data.rhythm.hold1}&exhale=${this.data.rhythm.exhale}&hold2=${this.data.rhythm.hold2}`
     })
   },
 
   hasLoginCache() {
     const userInfo = wx.getStorageSync('userInfo')
     return !!(userInfo && userInfo.openid)
+  },
+
+  async promptSubscribeOnStart() {
+    const templateId = 'YUP2qo8lHFjeWTaJiEuBLSI0W_5zsYzPTEHmZ6tjZAQ'
+    if (!wx.requestSubscribeMessage) return
+    const lastAt = wx.getStorageSync('lastStartSubscribePromptAt') || 0
+    if (lastAt && Date.now() - lastAt < 24 * 60 * 60 * 1000) return
+
+    return new Promise((resolve) => {
+      wx.showModal({
+        title: '订阅提醒',
+        content: '订阅后可接收训练提醒通知（可随时在微信设置中关闭）。',
+        confirmText: '订阅',
+        cancelText: '跳过',
+        success: (res) => {
+          wx.setStorageSync('lastStartSubscribePromptAt', Date.now())
+          if (!res.confirm) {
+            resolve()
+            return
+          }
+          wx.requestSubscribeMessage({
+            tmplIds: [templateId],
+            complete: () => resolve()
+          })
+        },
+        fail: () => {
+          wx.setStorageSync('lastStartSubscribePromptAt', Date.now())
+          resolve()
+        }
+      })
+    })
   },
 
   showPhoneLogin() {
@@ -514,31 +682,12 @@ Page({
     }
   },
 
-  // 订阅相关方法
-  showSubscribeModal() {
-    // 确保时间数组长度等于频率
-    const frequency = this.data.reminderFrequency || 1
-    const times = [...this.data.reminderTimes]
-    while (times.length < frequency) {
-      times.push('')
-    }
-    this.setData({
-      showSubscribeModal: true,
-      reminderTimes: times
-    })
-  },
-
-  hideSubscribeModal() {
-    this.setData({
-      showSubscribeModal: false
-    })
-  },
-
   ensureLogin(force = false, phoneCode = '') {
     return new Promise((resolve, reject) => {
       // 检查是否已有用户信息
       const userInfo = wx.getStorageSync('userInfo')
-      if (!force && userInfo && userInfo.openid) {
+      // 如果这次是手机号快捷登录（phoneCode 存在），必须走云函数换取手机号，不能直接用 openid 缓存短路
+      if (!force && !phoneCode && userInfo && userInfo.openid) {
         console.log('用户已登录', userInfo.openid)
         resolve(userInfo)
         return
@@ -588,324 +737,9 @@ Page({
     })
   },
 
-  toggleSubscribe(e) {
-    this.setData({
-      subscribeEnabled: e.detail.value
-    })
-  },
-
-  // 选择提醒频率
-  selectFrequency(e) {
-    const frequency = parseInt(e.currentTarget.dataset.frequency)
-    const currentTimes = [...this.data.reminderTimes]
-    
-    // 根据新频率调整时间数组
-    if (frequency < currentTimes.length) {
-      // 减少频率，截取数组
-      currentTimes.splice(frequency)
-    } else if (frequency > currentTimes.length) {
-      // 增加频率，添加空字符串，让用户必须选择时间
-      for (let i = currentTimes.length; i < frequency; i++) {
-        currentTimes.push('') // 不设置默认时间，用户必须手动选择
-      }
-    }
-    
-    // 确保数组长度至少等于频率（处理初始为空数组的情况）
-    while (currentTimes.length < frequency) {
-      currentTimes.push('')
-    }
-    
-    this.setData({
-      reminderFrequency: frequency,
-      reminderTimes: currentTimes
-    })
-  },
-
-
-  // 时间选择器变化
-  onTimePickerChange(e) {
-    const time = e.detail.value
-    // 从 picker 的 data-index 获取索引
-    let index = 0
-    
-    // 尝试多种方式获取索引
-    if (e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.index !== undefined) {
-      index = parseInt(e.currentTarget.dataset.index)
-    } else if (e.target && e.target.dataset && e.target.dataset.index !== undefined) {
-      index = parseInt(e.target.dataset.index)
-    } else {
-      // 如果获取不到索引，尝试通过比较时间值来确定（不推荐，但作为备选）
-      console.warn('无法获取索引，尝试通过时间值匹配')
-      const currentTimes = this.data.reminderTimes
-      for (let i = 0; i < currentTimes.length; i++) {
-        if (currentTimes[i] && currentTimes[i] !== time) {
-          // 找到第一个不同的时间，可能是这个索引
-          index = i
-          break
-        }
-      }
-    }
-    
-    console.log('时间选择器变化:', { 
-      time, 
-      index,
-      currentTargetDataset: e.currentTarget ? e.currentTarget.dataset : undefined,
-      targetDataset: e.target ? e.target.dataset : undefined,
-      detail: e.detail,
-      currentReminderTimes: this.data.reminderTimes
-    })
-    
-    const times = [...this.data.reminderTimes]
-    
-    // 确保数组长度足够
-    while (times.length <= index) {
-      times.push('')
-    }
-    
-    // 设置时间值
-    times[index] = time
-    
-    console.log('更新前的时间数组:', this.data.reminderTimes)
-    console.log('更新后的时间数组:', times)
-    
-    // 直接更新整个数组，确保数据同步
-    this.setData({
-      reminderTimes: times
-    }, () => {
-      console.log('setData 完成后的时间数组:', this.data.reminderTimes)
-      // 验证更新是否成功
-      if (this.data.reminderTimes[index] !== time) {
-        console.error('时间更新失败！期望:', time, '实际:', this.data.reminderTimes[index])
-      } else {
-        console.log('时间更新成功！')
-      }
-    })
-    
-    // 保存提醒时间设置
-    const subscribeSettings = wx.getStorageSync('subscribeSettings') || {}
-    subscribeSettings.times = times
-    subscribeSettings.reminderTimes = times.map(t => {
-      if (!t) return { hour: 10, minute: 0 }
-      const [hour, minute] = t.split(':').map(Number)
-      return { hour, minute }
-    })
-    wx.setStorageSync('subscribeSettings', subscribeSettings)
-    
-    console.log('已保存订阅设置:', subscribeSettings)
-  },
-
-  // 关闭练习时长选择器
   hideTimePicker() {
     this.setData({
       showTimePicker: false
-    })
-  },
-
-
-  async confirmSubscribe() {
-    // 检查用户是否已登录
-    const userInfo = wx.getStorageSync('userInfo')
-    if (!userInfo || !userInfo.openid) {
-      // 用户未登录，先进行登录
-      wx.showLoading({
-        title: '正在登录...',
-        mask: true
-      })
-      
-      try {
-        await this.ensureLogin()
-        wx.hideLoading()
-      } catch (err) {
-        wx.hideLoading()
-        console.error('登录失败', err)
-        wx.showToast({
-          title: '登录失败，请重试',
-          icon: 'none'
-        })
-        return
-      }
-    }
-
-    // 验证频率是否已选择
-    if (!this.data.reminderFrequency || this.data.reminderFrequency < 1) {
-      wx.showToast({
-        title: '请选择提醒频率',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 验证时间是否都已设置（用户必须为每个频率选择具体时间）
-    const times = this.data.reminderTimes.slice(0, this.data.reminderFrequency)
-    const emptyTimes = times.filter(time => !time || !time.trim())
-    
-    if (emptyTimes.length > 0) {
-      wx.showToast({
-        title: `请设置所有${this.data.reminderFrequency}个提醒时间`,
-        icon: 'none'
-      })
-      return
-    }
-
-    // 保存订阅设置（使用新的数据结构）
-    const subscribeSettings = {
-      enabled: true, // 默认开启
-      frequency: this.data.reminderFrequency || 3, // 提醒频率：1、2、3
-      times: times, // 具体提醒时间数组，如 ['09:00', '14:00', '20:00']
-      type: 'daily', // 固定为每日
-      reminderTimes: times.map(time => {
-        // 将时间字符串转换为小时和分钟
-        const [hour, minute] = time.split(':').map(Number)
-        return { hour, minute }
-      })
-    }
-    
-    // 验证 subscribeSettings 对象是否完整
-    if (!subscribeSettings.type || !subscribeSettings.frequency || !subscribeSettings.times) {
-      console.error('订阅设置对象不完整', subscribeSettings)
-      wx.showToast({
-        title: '设置保存失败，请重试',
-        icon: 'none'
-      })
-      return
-    }
-    
-    wx.setStorageSync('subscribeSettings', subscribeSettings)
-    
-    // 调用订阅消息
-    this.subscribeMessage(subscribeSettings)
-    
-    // 标记已显示过订阅
-    wx.setStorageSync('hasShownSubscribe', true)
-    
-    // 关闭弹窗
-    this.setData({
-      showSubscribeModal: false
-    })
-    
-    wx.showToast({
-      title: '提醒计划已开启',
-      icon: 'success'
-    })
-  },
-
-  subscribeMessage(settings) {
-    // 验证 settings 参数
-    if (!settings || typeof settings !== 'object') {
-      console.error('subscribeMessage: settings 参数无效', settings)
-      wx.showToast({
-        title: '设置参数错误',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 验证必要字段
-    if (!settings.type || !settings.frequency || !settings.times) {
-      console.error('subscribeMessage: settings 缺少必要字段', settings)
-      wx.showToast({
-        title: '设置不完整',
-        icon: 'none'
-      })
-      return
-    }
-
-    // 调用微信订阅消息接口
-    wx.requestSubscribeMessage({
-      tmplIds: ['YUP2qo8lHFjeWTaJiEuBLSI0W_5zsYzPTEHmZ6tjZAQ'],
-      success: async (res) => {
-        console.log('订阅成功', res)
-        
-        // 保存订阅设置到云数据库
-        try {
-          const userInfo = wx.getStorageSync('userInfo')
-          const openid = userInfo && userInfo.openid
-          
-          if (!openid) {
-            console.error('未获取到 openid')
-            return
-          }
-          
-          const db = wx.cloud.database()
-          
-          // 查询是否已存在订阅设置
-          // 注意：同时查询 openid 和 _openid，因为可能只有其中一个字段
-          const existingByOpenid = await db.collection('subscribe_settings')
-            .where({
-              openid: openid
-            })
-            .get()
-          
-          const existingByOpenid2 = await db.collection('subscribe_settings')
-            .where({
-              _openid: openid
-            })
-            .get()
-          
-          // 合并查询结果，去重（原 bug：第二个应是 existingByOpenid2）
-          const allExisting = [...existingByOpenid.data, ...((existingByOpenid2 && existingByOpenid2.data) || [])]
-          const uniqueExisting = allExisting.filter((item, index, self) => 
-            index === self.findIndex(t => t._id === item._id)
-          )
-          
-          const dataToSave = {
-            enabled: settings.enabled !== undefined ? settings.enabled : true,
-            frequency: settings.frequency,
-            times: settings.times,
-            reminderTimes: settings.reminderTimes,
-            type: settings.type,
-            subscribeResult: res,
-            updateTime: db.serverDate()
-          }
-          
-          // 确保 openid 字段存在
-          if (!uniqueExisting.length || !uniqueExisting[0].openid) {
-            dataToSave.openid = openid
-          }
-          
-          console.log('[保存订阅] 准备保存的数据:', JSON.stringify(dataToSave, null, 2))
-          
-          if (uniqueExisting.length > 0) {
-            // 更新现有记录
-            const updateResult = await db.collection('subscribe_settings')
-              .doc(uniqueExisting[0]._id)
-              .update({
-                data: dataToSave
-              })
-            console.log('[保存订阅] ✅ 更新记录成功, ID:', uniqueExisting[0]._id, '结果:', updateResult)
-          } else {
-            // 创建新记录
-            dataToSave.openid = openid
-            dataToSave.createTime = db.serverDate()
-            const addResult = await db.collection('subscribe_settings')
-              .add({
-                data: dataToSave
-              })
-            console.log('[保存订阅] ✅ 创建记录成功, ID:', addResult._id)
-          }
-          
-          // 验证保存是否成功：立即查询一次
-          const verifyResult = await db.collection('subscribe_settings')
-            .where({
-              openid: openid
-            })
-            .get()
-          
-          if (verifyResult.data.length > 0) {
-            console.log('[保存订阅] ✅ 验证成功，查询到记录:', verifyResult.data[0]._id)
-            console.log('[保存订阅] 记录的 reminderTimes:', JSON.stringify(verifyResult.data[0].reminderTimes))
-          } else {
-            console.warn('[保存订阅] ⚠️ 验证失败，未查询到刚保存的记录，可能需要等待数据库同步')
-          }
-          
-          console.log('订阅设置已保存到云数据库')
-        } catch (err) {
-          console.error('保存订阅设置失败', err)
-        }
-      },
-      fail: (err) => {
-        console.error('订阅失败', err)
-      }
     })
   }
 })

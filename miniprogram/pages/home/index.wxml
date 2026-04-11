@@ -62,51 +62,6 @@
     </view>
   </view>
 
-  <!-- 订阅计划弹窗 -->
-  <view class="subscribe-modal {{showSubscribeModal ? 'show' : ''}}" catchtap="hideSubscribeModal">
-    <view class="subscribe-modal-content" catchtap="stopPropagation">
-      <view class="subscribe-header">
-        <text class="subscribe-title">提醒设置</text>
-        <view class="subscribe-close-btn" bindtap="hideSubscribeModal">
-          <text class="close-icon">✕</text>
-        </view>
-      </view>
-      
-      <!-- 每日提醒频率 -->
-      <view class="frequency-section">
-        <text class="section-label">每日提醒频率</text>
-        <view class="frequency-buttons">
-          <view class="frequency-btn {{reminderFrequency === 1 ? 'active' : ''}}" bindtap="selectFrequency" data-frequency="1">1次</view>
-          <view class="frequency-btn {{reminderFrequency === 2 ? 'active' : ''}}" bindtap="selectFrequency" data-frequency="2">2次</view>
-          <view class="frequency-btn {{reminderFrequency === 3 ? 'active' : ''}}" bindtap="selectFrequency" data-frequency="3">3次</view>
-        </view>
-      </view>
-      
-      <!-- 设置具体时间 -->
-      <view class="time-settings-section">
-        <text class="section-label">设置具体时间</text>
-        <view class="time-settings-list">
-          <view class="time-setting-item" wx:for="{{reminderTimes}}" wx:for-index="timeIndex" wx:key="timeIndex" wx:if="{{timeIndex < reminderFrequency}}">
-            <text class="time-setting-label">第{{timeIndex + 1}}次提醒</text>
-            <picker mode="time" value="{{item || '10:00'}}" bindchange="onTimePickerChange" data-index="{{timeIndex}}">
-              <view class="time-setting-value">
-                <text class="time-value-text {{item ? '' : 'time-placeholder'}}">{{item || '请选择时间'}}</text>
-                <text class="time-icon">🕐</text>
-              </view>
-            </picker>
-          </view>
-        </view>
-      </view>
-      
-      <!-- 底部按钮 -->
-      <view class="subscribe-buttons">
-        <button class="subscribe-ignore-btn" bindtap="hideSubscribeModal">忽略</button>
-        <button class="subscribe-confirm-btn" bindtap="confirmSubscribe">保存设置</button>
-      </view>
-    </view>
-  </view>
-
-
   <!-- 时间选择区 -->
   <view class="time-section" style="z-index: {{timeSectionZIndex || 4}};">
     <view class="time-display-wrapper">
@@ -114,9 +69,9 @@
         <text class="time-value">{{timeDisplay || formatTime(duration)}}</text>
         <text class="time-hint">点击这里切换时间</text>
       </view>
-      <view class="bell-icon-wrapper" bindtap="showSubscribeModal">
+      <view class="bell-icon-wrapper" bindtap="showTimePicker">
         <view class="bell-icon">
-          <image class="bell-svg" src="../../images/icons/bell-icon.svg" mode="aspectFit"></image>
+          <image class="bell-svg" src="../../images/icons/time.svg" mode="aspectFit"></image>
         </view>
       </view>
     </view>
@@ -200,17 +155,95 @@
         <text class="rhythm-label">吸气</text>
         <text class="rhythm-time">{{rhythm.inhale}}s</text>
       </view>
-      <view class="rhythm-item rhythm-exhale">
+      <view class="rhythm-item rhythm-hold-mid">
+        <text class="rhythm-label">保持</text>
+        <text class="rhythm-time">{{rhythm.hold1}}s</text>
+      </view>
+      <view class="rhythm-item rhythm-exhale-after-hold">
         <text class="rhythm-label">呼气</text>
         <text class="rhythm-time">{{rhythm.exhale}}s</text>
       </view>
-      <view class="rhythm-item rhythm-hold">
+      <view class="rhythm-item rhythm-hold-end">
         <text class="rhythm-label">保持</text>
-        <text class="rhythm-time">{{rhythm.hold}}s</text>
+        <text class="rhythm-time">{{rhythm.hold2}}s</text>
       </view>
     </view>
     
-    <text class="rhythm-hint" bindtap="editRhythm">点击自定义呼吸节奏 ></text>
+    <view class="rhythm-links">
+      <text class="rhythm-hint" bindtap="editRhythm">点击自定义呼吸节奏 ></text>
+      <view class="breath-info-link" bindtap="showBreathInfo">
+        <text class="breath-info-link-text">了解腹式呼吸指南</text>
+        <text class="breath-info-link-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="breath-info-modal {{showBreathInfoModal ? 'show' : ''}}" catchtap="hideBreathInfo">
+    <view class="breath-info-content" catchtap="stopPropagation">
+      <view class="breath-info-header">
+        <view class="breath-info-title">腹式呼吸</view>
+        <view class="breath-info-close" bindtap="hideBreathInfo">✕</view>
+      </view>
+      <scroll-view class="breath-info-scroll" scroll-y="true">
+        <view class="binfo-body">
+
+          <view class="binfo-summary-card">
+            <text class="binfo-meta">简单总结一句话</text>
+            <text class="binfo-para">慢 + 深 + 有节奏的呼吸 = 身体从"紧张模式"切换到"恢复模式"</text>
+          </view>
+
+          <view class="binfo-section-label">
+            <view class="binfo-bar binfo-bar-green"></view>
+            <text class="binfo-section-text">练习步骤</text>
+          </view>
+
+          <view class="binfo-card">
+            <text class="binfo-para-muted">标准节奏版 4-4-6 · 吸气 4 秒 / 停顿 4 秒 / 呼气 6 秒</text>
+          </view>
+
+          <view class="binfo-row-card">
+            <view class="binfo-icon-box"><text class="binfo-icon">🖐</text></view>
+            <view class="binfo-card-main">
+              <text class="binfo-meta">准备开始</text>
+              <text class="binfo-card-body">把一只手放在胸口，一只手放在腹部，让注意力慢慢回到呼吸上</text>
+            </view>
+          </view>
+
+          <view class="binfo-row-card">
+            <view class="binfo-icon-box"><text class="binfo-icon">🌬</text></view>
+            <view class="binfo-card-main">
+              <text class="binfo-meta">步骤 1</text>
+              <text class="binfo-card-title">吸气（4秒）</text>
+              <text class="binfo-card-body">慢慢吸气……让空气进入腹部，感受小腹轻轻鼓起</text>
+            </view>
+          </view>
+
+          <view class="binfo-row-card">
+            <view class="binfo-icon-box"><text class="binfo-icon">⏸</text></view>
+            <view class="binfo-card-main">
+              <text class="binfo-meta">步骤 2</text>
+              <text class="binfo-card-title">停顿（4秒）</text>
+              <text class="binfo-card-body">保持呼吸，不要用力，让身体自然停留</text>
+            </view>
+          </view>
+
+          <view class="binfo-row-card">
+            <view class="binfo-icon-box"><text class="binfo-icon">💨</text></view>
+            <view class="binfo-card-main">
+              <text class="binfo-meta">步骤 3</text>
+              <text class="binfo-card-title">呼气（6秒）</text>
+              <text class="binfo-card-body">缓缓呼气……让腹部慢慢回落，释放身体的紧张</text>
+            </view>
+          </view>
+
+          <view class="binfo-card">
+            <text class="binfo-meta">循环提示</text>
+            <text class="binfo-para">吸气……停……呼气……每一次呼吸，都让身体更放松一点</text>
+          </view>
+
+        </view>
+      </scroll-view>
+    </view>
   </view>
   
   <!-- 开始按钮 -->
@@ -266,6 +299,31 @@
       
       <view class="rhythm-editor-item">
         <view class="editor-label-row">
+          <text class="editor-label">保持时间（吸气后）</text>
+          <text class="editor-value-display">{{tempRhythm.hold1}} 秒</text>
+        </view>
+        <view class="editor-slider-wrapper">
+          <slider 
+            value="{{tempRhythm.hold1}}" 
+            min="0" 
+            max="15" 
+            step="1"
+            activeColor="#FF82B7"
+            backgroundColor="#5D5C80"
+            block-color="rgb(246, 135, 179)"
+            block-size="24"
+            bindchange="onHold1Change"
+            show-value="{{false}}"
+          />
+          <view class="slider-labels-mini">
+            <text>0s</text>
+            <text>15s</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="rhythm-editor-item">
+        <view class="editor-label-row">
           <text class="editor-label">呼气时间</text>
           <text class="editor-value-display">{{tempRhythm.exhale}} 秒</text>
         </view>
@@ -288,27 +346,27 @@
           </view>
         </view>
       </view>
-      
+
       <view class="rhythm-editor-item">
         <view class="editor-label-row">
-          <text class="editor-label">保持时间</text>
-          <text class="editor-value-display">{{tempRhythm.hold}} 秒</text>
+          <text class="editor-label">保持时间（呼气后）</text>
+          <text class="editor-value-display">{{tempRhythm.hold2}} 秒</text>
         </view>
         <view class="editor-slider-wrapper">
           <slider 
-            value="{{tempRhythm.hold}}" 
-            min="1" 
+            value="{{tempRhythm.hold2}}" 
+            min="0" 
             max="15" 
             step="1"
             activeColor="#FF82B7"
             backgroundColor="#5D5C80"
             block-color="rgb(246, 135, 179)"
             block-size="24"
-            bindchange="onHoldChange"
+            bindchange="onHold2Change"
             show-value="{{false}}"
           />
           <view class="slider-labels-mini">
-            <text>1s</text>
+            <text>0s</text>
             <text>15s</text>
           </view>
         </view>

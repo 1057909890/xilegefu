@@ -39,6 +39,16 @@ Page({
     try {
       const db = wx.cloud.database()
       const _ = db.command
+      const userInfo = wx.getStorageSync('userInfo') || {}
+      const openid = userInfo.openid
+      if (!openid) {
+        this.setData({
+          todayCount: 0,
+          totalCount: 0,
+          checkInDays: 0
+        })
+        return
+      }
       
       // 获取今日训练次数
       // 使用 date 字段查询，因为保存时使用的是 new Date()
@@ -47,12 +57,14 @@ Page({
       // 微信云数据库支持 Date 对象的直接比较
       const todayRecords = await db.collection('training_records')
         .where({
+          _openid: openid,
           date: _.gte(today)
         })
         .count()
       
       // 获取总训练次数
       const totalRecords = await db.collection('training_records')
+        .where({ _openid: openid })
         .count()
       
       // 获取连续打卡天数（简化版，实际需要更复杂的逻辑）
@@ -70,6 +82,7 @@ Page({
           try {
             const retryTodayRecords = await db.collection('training_records')
               .where({
+                _openid: openid,
                 date: _.gte(today)
               })
               .count()
@@ -100,7 +113,11 @@ Page({
   async getCheckInDays() {
     try {
       const db = wx.cloud.database()
+      const userInfo = wx.getStorageSync('userInfo') || {}
+      const openid = userInfo.openid
+      if (!openid) return 0
       const records = await db.collection('training_records')
+        .where({ _openid: openid })
         .orderBy('date', 'desc')
         .limit(30)
         .get()
@@ -135,17 +152,22 @@ Page({
 
   // 检查是否需要显示订阅提示
   checkSubscribePrompt() {
-    // 检查是否首次完成训练且未设置订阅
-    const hasShownSubscribe = wx.getStorageSync('hasShownSubscribe')
+    return
     const subscribeSettings = wx.getStorageSync('subscribeSettings')
-    if (!hasShownSubscribe && !subscribeSettings) {
-      // 延迟显示订阅弹窗，避免与完成页冲突
-      setTimeout(() => {
-        this.setData({
-          showSubscribeModal: true
-        })
-      }, 2000)
-    }
+    if (subscribeSettings) return
+
+    const pad2 = (n) => String(n).padStart(2, '0')
+    const now = new Date()
+    const today = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`
+
+    const lastShownDate = wx.getStorageSync('lastSubscribePromptDate')
+    if (lastShownDate === today) return
+
+    setTimeout(() => {
+      this.setData({
+        showSubscribeModal: true
+      })
+    }, 2000)
   },
 
   // 订阅相关方法
@@ -155,6 +177,10 @@ Page({
     })
     // 标记已显示过订阅弹窗
     wx.setStorageSync('hasShownSubscribe', true)
+    const pad2 = (n) => String(n).padStart(2, '0')
+    const now = new Date()
+    const today = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`
+    wx.setStorageSync('lastSubscribePromptDate', today)
   },
 
   toggleSubscribe(e) {
@@ -277,6 +303,10 @@ Page({
     
     // 标记已显示过订阅
     wx.setStorageSync('hasShownSubscribe', true)
+    const pad2 = (n) => String(n).padStart(2, '0')
+    const now = new Date()
+    const today = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`
+    wx.setStorageSync('lastSubscribePromptDate', today)
     
     // 关闭弹窗
     this.setData({
