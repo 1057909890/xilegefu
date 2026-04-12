@@ -167,7 +167,7 @@
   justify-content: space-around;
   align-items: center;
   background: #262947;
-  border-radius: 24rpx;
+  border-radius: 56rpx;
   padding: 32rpx 0;
 }
 
