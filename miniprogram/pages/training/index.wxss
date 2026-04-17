@@ -46,9 +46,28 @@
   height: 520rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.06);
+  border: 4rpx solid #4FA5FF;
+  box-shadow: 0 0 60rpx rgba(79, 165, 255, 0.6),
+              0 0 120rpx rgba(79, 165, 255, 0.4),
+              inset 0 0 40rpx rgba(79, 165, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.prestart-lamp-loader {
+  position: absolute;
+  top: -4rpx;
+  left: -4rpx;
+  right: -4rpx;
+  bottom: -4rpx;
+  border-radius: 50%;
+  border: 8rpx solid transparent;
+  border-top-color: #4FA5FF;
+  border-right-color: #4FA5FF;
+  box-sizing: border-box;
+  animation: prestart-ring-load 6s linear forwards;
 }
 
 .prestart-lamp-inner {
@@ -56,6 +75,17 @@
   height: 220rpx;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.42);
+}
+
+@keyframes prestart-ring-load {
+  0% {
+    transform: rotate(-90deg);
+    opacity: 0.35;
+  }
+  100% {
+    transform: rotate(270deg);
+    opacity: 1;
+  }
 }
 
 .prestart-tip {
@@ -208,7 +238,7 @@
   width: 300rpx;
   height: 300rpx;
   border-radius: 50%;
-  margin: 0 auto 40rpx;
+  margin: 0 auto 100rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -249,10 +279,15 @@
 }
 
 .breathing-hint {
-  font-size: 28rpx;
-  color: #B9C6E2;
-  opacity: 0.9;
-  margin-top: 24rpx;
+  max-width: 560rpx;
+  margin: 48rpx auto 0;
+  padding: 0 24rpx;
+  font-size: 30rpx;
+  color: rgba(185, 198, 226, 0.94);
+  line-height: 1.65;
+  letter-spacing: 0.5rpx;
+  text-align: center;
+  text-shadow: 0 0 18rpx rgba(130, 208, 255, 0.18);
   transition: opacity 0.3s;
 }
 
@@ -287,6 +322,137 @@
 .fab-btn-icon {
   width: 56rpx;
   height: 56rpx;
+}
+
+.sound-settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 12000;
+  backdrop-filter: blur(20rpx);
+}
+
+.sound-settings-modal.show {
+  display: flex;
+}
+
+.sound-settings-wrapper {
+  width: 100%;
+  max-width: 680rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40rpx;
+  box-sizing: border-box;
+}
+
+.sound-settings-card {
+  width: 100%;
+  background: rgba(30, 30, 69, 0.95);
+  border-radius: 32rpx;
+  padding: 56rpx 44rpx 44rpx;
+  box-sizing: border-box;
+  backdrop-filter: blur(20rpx);
+  box-shadow: 0 18rpx 80rpx rgba(0, 0, 0, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.10);
+}
+
+.sound-settings-title {
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 46rpx;
+}
+
+.sound-mode-row {
+  height: 92rpx;
+  border-radius: 46rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  margin-bottom: 46rpx;
+}
+
+.sound-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.78);
+  border-right: 1rpx solid rgba(255, 255, 255, 0.10);
+}
+
+.sound-mode-btn:last-child {
+  border-right: none;
+}
+
+.sound-mode-btn.active {
+  color: #FFFFFF;
+}
+
+.sound-mode-btn.active[data-mode="mute"] {
+  background: linear-gradient(to right, rgb(34, 211, 238), rgb(59, 130, 246));
+}
+
+.sound-mode-btn.active[data-mode="voice"] {
+  background: linear-gradient(180deg, rgba(255, 130, 183, 1.05) 0%, #FF82B7 100%);
+}
+
+.sound-mode-btn.active[data-mode="bowl"] {
+  background: linear-gradient(180deg, rgba(79, 209, 197, 1.05) 0%, rgb(79, 209, 197) 100%);
+}
+
+.sound-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 0;
+}
+
+.sound-settings-label {
+  font-size: 34rpx;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sound-settings-actions {
+  margin-top: 94rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.sound-settings-cancel,
+.sound-settings-save {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0;
+  border-radius: 44rpx;
+  border: none;
+  font-size: 32rpx;
+  font-weight: 650;
+}
+
+.sound-settings-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgb(255 255 255 / 0.6);
+}
+
+.sound-settings-save {
+  background: linear-gradient(to right, rgb(34, 211, 238), rgb(59, 130, 246));
+  color: #FFFFFF;
+  box-shadow: rgba(6, 182, 212, 0.2) 0px 10px 15px -3px, rgba(6, 182, 212, 0.2) 0px 4px 6px -2px;
 }
 
 /* 说明图弹层（打开时 canvas 已卸掉，用普通 view 即可全屏盖住并正常显示本地图） */

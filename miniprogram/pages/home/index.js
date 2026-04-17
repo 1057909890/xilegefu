@@ -5,6 +5,11 @@ Page({
   data: {
     duration: 10,
     timeDisplay: '10:00',
+    soundMode: 'mute',
+    vibrationEnabled: false,
+    showSoundSettingsModal: false,
+    tempSoundMode: 'mute',
+    tempVibrationEnabled: false,
     rhythm: {
       inhale: 6,
       exhale: 4,
@@ -45,12 +50,18 @@ Page({
 
       // 从全局数据或本地存储加载设置
       const settings = wx.getStorageSync('trainingSettings')
+      const vibrationKey = wx.getStorageSync('trainingVibrationEnabled')
       if (settings) {
         const sr = settings.rhythm || {}
         const hold1 = sr.hold1 !== undefined ? sr.hold1 : (sr.hold !== undefined ? sr.hold : 4)
         const hold2 = sr.hold2 !== undefined ? sr.hold2 : (sr.hold !== undefined ? sr.hold : 0)
+        const soundMode = this.normalizeSoundMode(settings.soundMode)
         this.setData({
           duration: settings.duration || 10,
+          soundMode,
+          vibrationEnabled: vibrationKey !== '' && vibrationKey !== undefined
+            ? !!vibrationKey
+            : (settings.vibrationEnabled !== undefined ? settings.vibrationEnabled : false),
           rhythm: {
             inhale: sr.inhale !== undefined ? sr.inhale : 6,
             exhale: sr.exhale !== undefined ? sr.exhale : 4,
@@ -65,8 +76,14 @@ Page({
         const gr = (app.globalData.trainingSettings && app.globalData.trainingSettings.rhythm) || {}
         const hold1 = gr.hold1 !== undefined ? gr.hold1 : (gr.hold !== undefined ? gr.hold : 4)
         const hold2 = gr.hold2 !== undefined ? gr.hold2 : (gr.hold !== undefined ? gr.hold : 0)
+        const globalSoundMode = app.globalData.trainingSettings && app.globalData.trainingSettings.soundMode
+        const soundMode = this.normalizeSoundMode(globalSoundMode)
         this.setData({
           duration: defaultDuration,
+          soundMode,
+          vibrationEnabled: (app.globalData.trainingSettings && app.globalData.trainingSettings.vibrationEnabled) !== undefined
+            ? app.globalData.trainingSettings.vibrationEnabled
+            : false,
           rhythm: {
             inhale: gr.inhale !== undefined ? gr.inhale : 6,
             exhale: gr.exhale !== undefined ? gr.exhale : 4,
@@ -196,6 +213,92 @@ Page({
       this.setData({ breathInfoNodes })
     } catch (err) {
       console.error('home onLoad error', (err && (err.stack || err.message || err.errMsg)) || err)
+    }
+  },
+
+  showSoundSettings() {
+    this.setData({
+      showSoundSettingsModal: true,
+      timeSectionZIndex: 0,
+      tempSoundMode: this.normalizeSoundMode(this.data.soundMode),
+      tempVibrationEnabled: this.data.vibrationEnabled
+    })
+  },
+
+  hideSoundSettings() {
+    this.setData({
+      showSoundSettingsModal: false,
+      timeSectionZIndex: 4
+    })
+  },
+
+  selectSoundMode(e) {
+    const mode = e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.mode : ''
+    if (!mode) return
+    this.setData({ tempSoundMode: mode })
+  },
+
+  onVibrationToggle(e) {
+    const enabled = !!(e && e.detail && e.detail.value)
+    this.setData({ tempVibrationEnabled: enabled })
+    if (enabled) this.triggerHaptic()
+  },
+
+  onTestVibrationTap() {
+    wx.showToast({ title: '已触发震动测试', icon: 'none' })
+    this.triggerHaptic(true)
+  },
+
+  cancelSoundSettings() {
+    this.hideSoundSettings()
+  },
+
+  saveSoundSettings() {
+    const soundMode = this.normalizeSoundMode(this.data.tempSoundMode)
+    const vibrationEnabled = this.data.tempVibrationEnabled
+    this.setData({ soundMode, vibrationEnabled })
+    this.persistTrainingSettings({ soundMode, vibrationEnabled })
+    wx.setStorageSync('trainingVibrationEnabled', vibrationEnabled)
+    this.hideSoundSettings()
+  },
+
+  normalizeSoundMode(mode) {
+    if (mode === 'voice' || mode === 'bowl') return mode
+    return 'mute'
+  },
+
+  triggerHaptic(showError = false) {
+    let fallbackTried = false
+    const tryLongFallback = () => {
+      if (fallbackTried) return
+      fallbackTried = true
+      if (wx.vibrateLong) {
+        wx.vibrateLong({
+          fail: () => {
+            if (showError) wx.showToast({ title: '系统未响应震动', icon: 'none' })
+          }
+        })
+      } else if (showError) {
+        wx.showToast({ title: '当前设备不支持震动', icon: 'none' })
+      }
+    }
+
+    if (wx.vibrateShort) {
+      wx.vibrateShort({ type: 'heavy', fail: tryLongFallback })
+      setTimeout(() => wx.vibrateShort({ type: 'medium', fail: tryLongFallback }), 120)
+      setTimeout(() => tryLongFallback(), 260)
+      return
+    }
+
+    tryLongFallback()
+  },
+
+  persistTrainingSettings(partial) {
+    const settings = wx.getStorageSync('trainingSettings') || {}
+    const merged = { ...settings, ...partial }
+    wx.setStorageSync('trainingSettings', merged)
+    if (app && app.globalData) {
+      app.globalData.trainingSettings = { ...(app.globalData.trainingSettings || {}), ...partial }
     }
   },
 
@@ -593,16 +696,20 @@ Page({
   },
 
   async loginAndStartTraining() {
-    const settings = {
+    const settings = wx.getStorageSync('trainingSettings') || {}
+    const mergedSettings = {
+      ...settings,
       duration: this.data.duration,
-      rhythm: this.data.rhythm
+      rhythm: this.data.rhythm,
+      soundMode: this.data.soundMode,
+      vibrationEnabled: this.data.vibrationEnabled
     }
-    wx.setStorageSync('trainingSettings', settings)
-    app.globalData.trainingSettings = settings
+    wx.setStorageSync('trainingSettings', mergedSettings)
+    app.globalData.trainingSettings = { ...(app.globalData.trainingSettings || {}), ...mergedSettings }
     
     // 跳转到训练页面
     wx.navigateTo({
-      url: `/pages/training/index?duration=${this.data.duration}&inhale=${this.data.rhythm.inhale}&hold1=${this.data.rhythm.hold1}&exhale=${this.data.rhythm.exhale}&hold2=${this.data.rhythm.hold2}`
+      url: `/pages/training/index?duration=${this.data.duration}&inhale=${this.data.rhythm.inhale}&hold1=${this.data.rhythm.hold1}&exhale=${this.data.rhythm.exhale}&hold2=${this.data.rhythm.hold2}&vibrationEnabled=${this.data.vibrationEnabled ? 1 : 0}`
     })
   },
 

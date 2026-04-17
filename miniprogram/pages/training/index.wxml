@@ -5,6 +5,7 @@
     <view wx:if="{{preStartActive}}" class="prestart-mask">
       <view class="prestart-lamp">
         <view class="prestart-lamp-outer">
+          <view class="prestart-lamp-loader"></view>
           <view class="prestart-lamp-inner"></view>
         </view>
       </view>
@@ -20,7 +21,7 @@
       <view class="progress-ring">
         <!-- 说明弹窗打开时卸掉 canvas，避免原生层压盖；关闭后再 initCanvas 重绘 -->
         <canvas
-          wx:if="{{!showIntroTip && !preStartActive}}"
+          wx:if="{{!showIntroTip && !preStartActive && !showSoundSettingsModal}}"
           class="progress-canvas"
           type="2d"
           id="progressCanvas"
@@ -66,15 +67,39 @@
     
     <!-- 语音提示 + 说明（右下角纵向） -->
     <view class="fab-stack">
-      <view class="fab-btn" bindtap="toggleVoice" hover-class="fab-btn-hover">
+      <!-- <view class="fab-btn" bindtap="showSoundSettings" hover-class="fab-btn-hover">
         <image
           class="fab-btn-icon"
-          src="{{voiceOn ? '/images/icons/laba.svg' : '/images/icons/laba2.svg'}}"
+          src="{{soundMode === 'mute' ? '/images/icons/laba2.svg' : '/images/icons/laba.svg'}}"
           mode="aspectFit"
         />
       </view>
       <view class="fab-btn" bindtap="openIntroTip" hover-class="fab-btn-hover">
         <image class="fab-btn-icon" src="/images/icons/tip1.svg" mode="aspectFit" />
+      </view> -->
+    </view>
+
+    <view class="sound-settings-modal {{showSoundSettingsModal ? 'show' : ''}}" catchtap="hideSoundSettings">
+      <view class="sound-settings-wrapper" catchtap="noop">
+        <view class="sound-settings-card">
+          <view class="sound-settings-title">提示设置</view>
+
+          <view class="sound-mode-row">
+            <view class="sound-mode-btn {{tempSoundMode === 'mute' ? 'active' : ''}}" bindtap="selectSoundMode" data-mode="mute">静音</view>
+            <view class="sound-mode-btn {{tempSoundMode === 'voice' ? 'active' : ''}}" bindtap="selectSoundMode" data-mode="voice">语音</view>
+            <view class="sound-mode-btn {{tempSoundMode === 'bowl' ? 'active' : ''}}" bindtap="selectSoundMode" data-mode="bowl">钵</view>
+          </view>
+
+          <view class="sound-settings-row">
+            <view class="sound-settings-label">震动开关（{{tempVibrationEnabled ? '开' : '关'}}）</view>
+            <switch class="sound-settings-switch" checked="{{tempVibrationEnabled}}" bindchange="onVibrationToggle" color="#5EC8FF" />
+          </view>
+
+          <view class="sound-settings-actions">
+            <button class="sound-settings-cancel" bindtap="cancelSoundSettings">取消</button>
+            <button class="sound-settings-save" bindtap="saveSoundSettings">保存</button>
+          </view>
+        </view>
       </view>
     </view>
 

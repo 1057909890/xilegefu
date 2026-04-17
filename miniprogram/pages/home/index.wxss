@@ -127,6 +127,39 @@
   height: 44rpx;
 }
 
+.sound-icon-wrapper {
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sound-icon {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sound-icon-text {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1;
+  font-weight: 600;
+}
+
+.sound-icon-img {
+  width: 44rpx;
+  height: 44rpx;
+}
+
 .time-value {
   display: block;
   font-size: 130rpx;
@@ -161,6 +194,170 @@
   display: flex;
 }
 
+/* 声音/震动设置弹窗 */
+.sound-settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2400;
+  backdrop-filter: blur(20rpx);
+}
+
+.sound-settings-modal.show {
+  display: flex;
+}
+
+.sound-settings-wrapper {
+  width: 100%;
+  max-width: 680rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40rpx;
+  box-sizing: border-box;
+}
+
+.sound-settings-card {
+  width: 100%;
+  background: rgba(30, 30, 69, 0.95);
+  border-radius: 32rpx;
+  padding: 56rpx 44rpx 44rpx;
+  box-sizing: border-box;
+  backdrop-filter: blur(20rpx);
+  box-shadow: 0 18rpx 80rpx rgba(0, 0, 0, 0.55);
+  border: 1rpx solid rgba(255, 255, 255, 0.10);
+}
+
+.sound-settings-title {
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  margin-bottom: 46rpx;
+}
+
+.sound-mode-row {
+  height: 92rpx;
+  border-radius: 46rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1rpx solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  overflow: hidden;
+  margin-bottom: 46rpx;
+}
+
+.sound-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.78);
+  border-right: 1rpx solid rgba(255, 255, 255, 0.10);
+}
+
+.sound-mode-btn:last-child {
+  border-right: none;
+}
+
+.sound-mode-btn.active {
+  background: linear-gradient(135deg, rgba(94, 200, 255, 0.95) 0%, rgba(79, 165, 255, 0.95) 100%);
+  color: #FFFFFF;
+}
+
+.sound-mode-btn.active[data-mode="mute"] {
+  background: linear-gradient(to right, rgb(34, 211, 238), rgb(59, 130, 246));
+}
+
+.sound-mode-btn.active[data-mode="voice"] {
+  background: linear-gradient(180deg, rgba(255, 130, 183, 1.05) 0%, #FF82B7 100%);
+}
+
+.sound-mode-btn.active[data-mode="bowl"] {
+  background: linear-gradient(180deg, rgba(79, 209, 197, 1.05) 0%, rgb(79, 209, 197) 100%);
+}
+
+.sound-settings-label {
+  font-size: 34rpx;
+  font-weight: 650;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0;
+}
+
+.sound-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10rpx 0;
+  margin-top: 36rpx;
+}
+
+.sound-settings-row .sound-settings-label {
+  margin-bottom: 0;
+}
+
+.sound-settings-test-row {
+  margin-top: 18rpx;
+  margin-bottom: 14rpx;
+}
+
+.sound-settings-test-btn {
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 36rpx;
+  border: 1rpx solid rgba(94, 200, 255, 0.45);
+  background: rgba(94, 200, 255, 0.16);
+  color: rgba(225, 246, 255, 0.98);
+  font-size: 28rpx;
+  font-weight: 600;
+  text-align: center;
+}
+
+
+
+/* 开关关闭状态的背景色 */
+switch[checked="false"] .wx-switch-input,
+switch:not([checked]) .wx-switch-input {
+  background-color: #5D5C80 !important;
+}
+
+.sound-settings-actions {
+  margin-top: 28rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.sound-settings-cancel,
+.sound-settings-save {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0;
+  border-radius: 44rpx;
+  border: none;
+  font-size: 32rpx;
+  font-weight: 650;
+}
+
+.sound-settings-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgb(255 255 255 / 0.6);
+}
+
+.sound-settings-save {
+  background: linear-gradient(to right, rgb(34, 211, 238), rgb(59, 130, 246));
+  color: #FFFFFF;
+  box-shadow: rgba(6, 182, 212, 0.2) 0px 10px 15px -3px, rgba(6, 182, 212, 0.2) 0px 4px 6px -2px;
+}
+
 .time-picker-wrapper {
   width: 100%;
   display: flex;
@@ -173,12 +370,15 @@
 
 .picker-card {
   width: 100%;
-  background: rgba(60, 59, 94, 1);
-  border-radius: 32rpx;
   padding: 60rpx 40rpx;
   box-sizing: border-box;
+  background: rgba(30, 30, 69, 0.95);
+  border-radius: 32rpx;
+  padding-bottom: 50rpx; /* 底部留出更多空间，确保按钮可见 */
+  box-sizing: border-box;
   backdrop-filter: blur(20rpx);
-  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8rpx 40rpx rgba(0, 0, 0, 0.5);
+  border:1px solid rgb(255 255 255 / 0.1);
   position: relative;
   z-index: 1;
 }

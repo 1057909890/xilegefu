@@ -74,6 +74,15 @@
           <image class="bell-svg" src="../../images/icons/time.svg" mode="aspectFit"></image>
         </view>
       </view>
+      <view class="sound-icon-wrapper" bindtap="showSoundSettings">
+        <view class="sound-icon">
+          <image
+            class="sound-icon-img"
+            src="{{soundMode === 'mute' ? '/images/icons/laba2.svg' : '/images/icons/laba.svg'}}"
+            mode="aspectFit"
+          />
+        </view>
+      </view>
     </view>
     
     <!-- 时间选择器弹窗 -->
@@ -142,6 +151,31 @@
           <view class="picker-action-buttons">
             <button class="picker-cancel-btn" bindtap="hideTimePicker">取消</button>
             <button class="picker-confirm-btn" bindtap="confirmTime">确定</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 声音/震动设置弹窗 -->
+    <view class="sound-settings-modal {{showSoundSettingsModal ? 'show' : ''}}" catchtap="hideSoundSettings">
+      <view class="sound-settings-wrapper" catchtap="stopPropagation">
+        <view class="sound-settings-card">
+          <view class="sound-settings-title">提示设置</view>
+
+          <view class="sound-mode-row">
+            <view class="sound-mode-btn {{tempSoundMode === 'mute' ? 'active' : ''}}" bindtap="selectSoundMode" data-mode="mute">静音</view>
+            <view class="sound-mode-btn {{tempSoundMode === 'voice' ? 'active' : ''}}" bindtap="selectSoundMode" data-mode="voice">语音</view>
+            <view class="sound-mode-btn {{tempSoundMode === 'bowl' ? 'active' : ''}}" bindtap="selectSoundMode" data-mode="bowl">钵</view>
+          </view>
+
+          <view class="sound-settings-row">
+            <view class="sound-settings-label">震动开关（{{tempVibrationEnabled ? '开' : '关'}}）</view>
+            <switch class="sound-settings-switch" checked="{{tempVibrationEnabled}}" bindchange="onVibrationToggle" color="#5EC8FF"  />
+          </view>
+
+          <view class="sound-settings-actions">
+            <button class="sound-settings-cancel" bindtap="cancelSoundSettings">取消</button>
+            <button class="sound-settings-save" bindtap="saveSoundSettings">保存</button>
           </view>
         </view>
       </view>

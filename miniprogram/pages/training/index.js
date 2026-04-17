@@ -18,7 +18,7 @@ Page({
     breathingState: 'inhale', // inhale, exhale, hold
     breathingText: '吸气',
     breathingCount: 3,
-    // breathingHint: '慢慢吸气...',
+    breathingHint: '慢慢吸气，肚子自然地向外撑开。',
     breathScale: 0.8, // 呼吸动画缩放
     breathingDuration: 3, // 当前呼吸阶段的动画时长（秒）
     
@@ -35,7 +35,11 @@ Page({
     exhaleTimer: null,
     progressCanvas: null,
     completionHandled: false,
-    voiceOn: true,
+    soundMode: 'mute',
+    vibrationEnabled: false,
+    showSoundSettingsModal: false,
+    tempSoundMode: 'mute',
+    tempVibrationEnabled: false,
     showIntroTip: false,
     preStartActive: false,
     preStartCount: 0,
@@ -46,10 +50,21 @@ Page({
 
   onLoad(options) {
     this.initVoicePlayer()
-    const voiceSaved = wx.getStorageSync('trainingVoiceOn')
-    if (voiceSaved === false) {
-      this.setData({ voiceOn: false })
-    }
+    this.initBackgroundAudioPlayer()
+    const settings = wx.getStorageSync('trainingSettings') || {}
+    const soundMode = this.normalizeSoundMode(settings.soundMode)
+    const hasVibrationOpt = options.vibrationEnabled !== undefined && options.vibrationEnabled !== null && options.vibrationEnabled !== ''
+    const vibrationByQuery = hasVibrationOpt ? String(options.vibrationEnabled) === '1' : undefined
+    const vibrationByKey = wx.getStorageSync('trainingVibrationEnabled')
+    const vibrationEnabled = hasVibrationOpt
+      ? !!vibrationByQuery
+      : (vibrationByKey !== '' && vibrationByKey !== undefined
+        ? !!vibrationByKey
+        : (settings.vibrationEnabled !== undefined ? settings.vibrationEnabled : false))
+    this.setData({
+      soundMode,
+      vibrationEnabled
+    })
 
     // 保持屏幕常亮，避免训练时息屏
     wx.setKeepScreenOn({
@@ -73,7 +88,6 @@ Page({
     
     // 如果参数中没有，尝试从全局数据或本地存储获取
     if (!hasOpt(options.inhale)) {
-      const settings = wx.getStorageSync('trainingSettings')
       if (settings && settings.rhythm) {
         inhale = hasOpt(settings.rhythm.inhale) ? settings.rhythm.inhale : 6
         exhale = hasOpt(settings.rhythm.exhale) ? settings.rhythm.exhale : 4
@@ -121,6 +135,7 @@ Page({
     // 清理定时器
     this.clearTimers()
     this.stopAndDestroyVoicePlayer()
+    this.stopAndDestroyBackgroundAudioPlayer()
   },
 
   startPreStart() {
@@ -144,8 +159,13 @@ Page({
         clearInterval(t)
         this.setData({ preStartCount: 0, preStartTimer: null, preStartTip: '调整呼吸，放松身心。' })
         const timeout = setTimeout(() => {
-          this.setData({ preStartActive: false, preStartTimeout: null })
-          this.startTraining()
+          this.setData({ preStartActive: false, preStartTimeout: null }, () => {
+            const run = wx.nextTick || ((fn) => setTimeout(fn, 0))
+            run(() => {
+              this.initCanvas()
+              this.startTraining()
+            })
+          })
         }, stepMs)
         this.setData({ preStartTimeout: timeout })
         return
@@ -172,6 +192,13 @@ Page({
     this.voicePlayer.autoplay = false
   },
 
+  initBackgroundAudioPlayer() {
+    this.backgroundAudioPlayer = wx.createInnerAudioContext()
+    this.backgroundAudioPlayer.autoplay = false
+    this.backgroundAudioPlayer.loop = true
+    this.backgroundAudioPlayer.src = '/assets/audio/liaoyu.mp3'
+  },
+
   // 停止并销毁语音播放器
   stopAndDestroyVoicePlayer() {
     if (!this.voicePlayer) return
@@ -186,10 +213,40 @@ Page({
     this.voicePlayer = null
   },
 
+  stopAndDestroyBackgroundAudioPlayer() {
+    if (!this.backgroundAudioPlayer) return
+    try {
+      this.backgroundAudioPlayer.stop()
+      this.backgroundAudioPlayer.offError()
+      this.backgroundAudioPlayer.destroy()
+    } catch (err) {
+      console.warn('销毁背景音播放器失败', err)
+    }
+    this.backgroundAudioPlayer = null
+  },
+
+  startBackgroundAudioIfNeeded() {
+    if (this.data.soundMode !== 'bowl' || !this.backgroundAudioPlayer) return
+    try {
+      this.backgroundAudioPlayer.play()
+    } catch (err) {
+      console.warn('播放背景音失败', err)
+    }
+  },
+
+  pauseBackgroundAudio() {
+    if (!this.backgroundAudioPlayer) return
+    try {
+      this.backgroundAudioPlayer.pause()
+    } catch (err) {
+      console.warn('暂停背景音失败', err)
+    }
+  },
+
   // 播放阶段语音
   playVoiceByStage(stage, options = {}) {
     const { onEnded } = options
-    if (!this.data.voiceOn) {
+    if (this.data.soundMode !== 'voice') {
       if (typeof onEnded === 'function') onEnded()
       return
     }
@@ -222,15 +279,58 @@ Page({
     this.voicePlayer.play()
   },
 
-  toggleVoice() {
-    const voiceOn = !this.data.voiceOn
-    this.setData({ voiceOn })
-    wx.setStorageSync('trainingVoiceOn', voiceOn)
-    if (!voiceOn && this.voicePlayer) {
+  showSoundSettings() {
+    this.setData({
+      showSoundSettingsModal: true,
+      tempSoundMode: this.normalizeSoundMode(this.data.soundMode),
+      tempVibrationEnabled: this.data.vibrationEnabled,
+      progressCanvas: null
+    })
+  },
+
+  hideSoundSettings() {
+    this.setData({ showSoundSettingsModal: false }, () => {
+      const run = wx.nextTick || ((fn) => setTimeout(fn, 0))
+      run(() => this.initCanvas())
+    })
+  },
+
+  selectSoundMode(e) {
+    const mode = e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.mode : ''
+    if (!mode) return
+    this.setData({ tempSoundMode: mode })
+  },
+
+  onVibrationToggle(e) {
+    const enabled = !!(e && e.detail && e.detail.value)
+    this.setData({ tempVibrationEnabled: enabled })
+    if (enabled) this.triggerHaptic()
+  },
+
+  cancelSoundSettings() {
+    this.hideSoundSettings()
+  },
+
+  saveSoundSettings() {
+    const soundMode = this.normalizeSoundMode(this.data.tempSoundMode)
+    const vibrationEnabled = this.data.tempVibrationEnabled
+    this.setData({ soundMode, vibrationEnabled })
+    this.persistTrainingSettings({ soundMode, vibrationEnabled })
+    wx.setStorageSync('trainingVibrationEnabled', vibrationEnabled)
+
+    if (soundMode !== 'bowl') {
+      this.pauseBackgroundAudio()
+    } else if (this.data.isRunning && !this.data.isPaused) {
+      this.startBackgroundAudioIfNeeded()
+    }
+
+    if (soundMode !== 'voice' && this.voicePlayer) {
       try {
         this.voicePlayer.stop()
       } catch (e) {}
     }
+
+    this.hideSoundSettings()
   },
 
   openIntroTip() {
@@ -320,11 +420,15 @@ Page({
 
   // 开始训练
   startTraining() {
+    if (!this.data.progressCanvas) {
+      this.initCanvas()
+    }
     this.setData({
       isRunning: true,
       isPaused: false,
       completionHandled: false
     })
+    this.startBackgroundAudioIfNeeded()
     
     // 开始计时
     this.startTimer()
@@ -438,11 +542,12 @@ Page({
       breathingState: 'inhale',
       breathingText: '吸气',
       breathingCount: this.data.inhale,
-      // breathingHint: '慢慢吸气...',
+      breathingHint: '吸气，肚子自然地向外撑开。',
       breathScale: 0.8,
       breathingDuration: this.data.inhale
     })
     this.playVoiceByStage('inhale')
+    this.triggerStageReminder()
     
     // 使用setTimeout确保CSS transition生效
     setTimeout(() => {
@@ -464,11 +569,12 @@ Page({
       breathingState: 'hold',
       breathingText: '保持',
       breathingCount: duration,
-      // breathingHint: '保持...',
+      breathingHint: '保持。',
       breathingDuration: 0 // 无动画
       // breathScale 保持不变，不更新
     })
     this.playVoiceByStage('hold')
+    this.triggerStageReminder()
     
     // 倒计时更新
     this.startCountdown(duration)
@@ -481,11 +587,12 @@ Page({
       breathingState: 'exhale',
       breathingText: '呼气',
       breathingCount: this.data.exhale,
-      // breathingHint: '慢慢呼气...',
+      breathingHint: '呼气，嘴巴缩成吹口哨状慢慢吐气。',
       breathScale: 1.2,
       breathingDuration: this.data.exhale
     })
     this.playVoiceByStage('exhale')
+    this.triggerStageReminder()
     
     // 使用setTimeout确保CSS transition生效
     setTimeout(() => {
@@ -537,6 +644,7 @@ Page({
       this.setData({
         isPaused: false
       })
+      this.startBackgroundAudioIfNeeded()
       // 重新开始呼吸循环
       if (this.data.isRunning) {
         this.breathingCycle()
@@ -546,6 +654,7 @@ Page({
       this.setData({
         isPaused: true
       })
+      this.pauseBackgroundAudio()
     }
   },
 
@@ -566,6 +675,7 @@ Page({
         if (res.confirm) {
           this.clearTimers()
           this.stopAndDestroyVoicePlayer()
+          this.stopAndDestroyBackgroundAudioPlayer()
           wx.navigateBack()
         }
       }
@@ -582,12 +692,14 @@ Page({
           if (res.confirm) {
             this.clearTimers()
             this.stopAndDestroyVoicePlayer()
+            this.stopAndDestroyBackgroundAudioPlayer()
             wx.navigateBack()
           }
         }
       })
     } else {
       this.stopAndDestroyVoicePlayer()
+      this.stopAndDestroyBackgroundAudioPlayer()
       wx.navigateBack()
     }
   },
@@ -598,6 +710,7 @@ Page({
     this.setData({ completionHandled: true })
 
     this.clearTimers()
+    this.pauseBackgroundAudio()
     
     // 保存训练记录，等待保存完成后再跳转
     this.saveTrainingRecord(() => {
@@ -707,5 +820,67 @@ Page({
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  },
+
+  triggerStageReminder() {
+    if (!this.isVibrationEnabled()) return
+    this.triggerHaptic()
+  },
+
+  isVibrationEnabled() {
+    if (this.data.vibrationEnabled) return true
+    if (this.data.tempVibrationEnabled) return true
+    const vibrationByKey = wx.getStorageSync('trainingVibrationEnabled')
+    if (vibrationByKey !== '' && vibrationByKey !== undefined) return !!vibrationByKey
+    const settings = wx.getStorageSync('trainingSettings') || {}
+    return settings.vibrationEnabled !== undefined ? !!settings.vibrationEnabled : false
+  },
+
+  triggerHaptic(showError = false) {
+    if (wx.vibrateShort) {
+      wx.vibrateShort({
+        type: 'medium',
+        fail: () => {
+          wx.vibrateShort({
+            fail: () => {
+              if (wx.vibrateLong) {
+                wx.vibrateLong({
+                  fail: () => {
+                    if (showError) wx.showToast({ title: '系统未响应震动', icon: 'none' })
+                  }
+                })
+              } else if (showError) {
+                wx.showToast({ title: '当前设备不支持震动', icon: 'none' })
+              }
+            }
+          })
+        }
+      })
+      // iOS 部分机型自动触发时对单次短震不敏感，补一次长震兜底
+      setTimeout(() => {
+        if (wx.vibrateLong) wx.vibrateLong({})
+      }, 120)
+      return
+    }
+    if (wx.vibrateLong) {
+      wx.vibrateLong({
+        fail: () => {
+          if (showError) wx.showToast({ title: '系统未响应震动', icon: 'none' })
+        }
+      })
+      return
+    }
+    if (showError) wx.showToast({ title: '当前设备不支持震动', icon: 'none' })
+  },
+
+  persistTrainingSettings(partial) {
+    const settings = wx.getStorageSync('trainingSettings') || {}
+    const merged = { ...settings, ...partial }
+    wx.setStorageSync('trainingSettings', merged)
+  },
+
+  normalizeSoundMode(mode) {
+    if (mode === 'voice' || mode === 'bowl') return mode
+    return 'mute'
   }
 })
